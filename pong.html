@@ -3,6 +3,7 @@
 <head>
   <title>Basic Pong HTML Game</title>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
   html, body {
     height: 100%;
@@ -49,6 +50,8 @@
     border: 3px solid #cccccc;
     border-radius: 10px;
     background: #001122;
+    max-width: 90vw;
+    height: auto;
   }
   </style>
 </head>
@@ -257,8 +260,10 @@ canvas.addEventListener('touchmove', function(e) {
   e.preventDefault();
   const touch = e.touches[0];
   const rect = canvas.getBoundingClientRect();
-  const x = touch.clientX - rect.left;
-  const y = touch.clientY - rect.top;
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = (touch.clientX - rect.left) * scaleX;
+  const y = (touch.clientY - rect.top) * scaleY;
 
   if (x < canvas.width / 2) {
     // left paddle
@@ -277,4 +282,5 @@ canvas.addEventListener('touchmove', function(e) {
 requestAnimationFrame(loop);
 </script>
 </body>
+
 </html>
