@@ -35,6 +35,8 @@
             border: 3px solid #4ecdc4;
             background: #000;
             box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+            max-width: 90vw;
+            height: auto;
         }
 
         .game-info {
@@ -619,7 +621,8 @@
             if (!gameRunning || isPaused) return;
             
             const rect = canvas.getBoundingClientRect();
-            const touchX = e.touches[0].clientX - rect.left;
+            const scaleX = canvas.width / rect.width;
+            const touchX = (e.touches[0].clientX - rect.left) * scaleX;
             paddle.x = touchX - paddle.width / 2;
             
             // Keep paddle within bounds
@@ -633,4 +636,5 @@
         gameLoop();
     </script>
 </body>
+
 </html>
