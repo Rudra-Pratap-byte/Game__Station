@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="=" en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>🧠 Math Quiz Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #121212;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .quiz-box {
+            background: #1e1e1e;
+            width: 360px;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            color: #00c9ff;
+        }
+
+        .controls {
+            margin-bottom: 22px;
+        }
+
+        select {
+            padding: 6px 8px;
+            background: #2b2b2b;
+            color: #e0e0e0;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        button {
+            display: inline-block;
+            margin-top: 18px;
+            background: #00c9ff;
+            color: #121212;
+            font-size: 1rem;
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.15s, background 0.15s;
+        }
+
+        button:hover {
+            background: #009bbf;
+            transform: translateY(-2px);
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        #timer-progress {
+            width: 100%;
+            height: 100%;
+            background: #00c9ff;
+            transition: width 1s linear;
+        }
+
+        #timer,
+        #score {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: #bbb;
+        }
+
+        #question {
+            font-size: 1.2rem;
+            min-height: 2.5rem;
+            margin: 16px 0;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .option {
+            background: #2b2b2b;
+            color: #e0e0e0;
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .option:hover:enabled {
+            background: #3a3a3a;
+            transform: translateY(-2px);
+        }
+
+        .option:disabled {
+            cursor: default;
+            opacity: 0.75;
+        }
+
+        #summary {
+            margin-top: 22px;
+            text-align: left;
+            font-size: 0.95rem;
+            background: #1c1c1c;
+            padding: 16px;
+            border-radius: 8px;
+            display: none;
+            max-height: 300px;
+            overflow: auto;
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE/Edge */
+        }
+
+        #summary::-webkit-scrollbar {
+            display: none;
+            /* Chrome, Safari */
+        }
+
+        #summary strong {
+            color: #00c9ff;
+        }
+
+        #summary .correct {
+            color: #8ed28f;
+        }
+
+        #summary .wrong {
+            color: #f87d7d;
+        }
+
+        @media (max-width: 420px) {
+            .quiz-box {
+                width: 92vw;
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .options {
+                gap: 8px;
+            }
+
+            .option {
+                padding: 10px;
+                font-size: 0.95rem;
+            }
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-button">← Back to Game Hub</a>
+
+    <div class="quiz-box">
+        <h1>🧠 Advanced Math Quiz</h1>
+
+        <div id="startScreen">
+            <p>Select difficulty and press Start to begin.</p>
+            <div class="controls">
+                Difficulty:
+                <select id="difficulty">
+                    <option value="easy">Easy (±10)</option>
+                    <option value="medium">Medium (±20)</option>
+                    <option value="hard">Hard (±50)</option>
+                </select>
+            </div>
+            <button onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quizUI" style="display:none;">
+            <div id="timer-bar">
+                <div id="timer-progress"></div>
+            </div>
+            <div id="timer">Time Left: 30s</div>
+            <div id="score">Score: 0</div>
+
+            <div id="question">Loading...</div>
+            <div class="options" id="options"></div>
+
+            <button id="restartBtn" style="display:none;">Restart Quiz</button>
+            <div id="summary"></div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0, total = 0, correct = 0, wrong = 0;
+        let timeLeft = 30, correctAnswer;
+        let timerInterval;
+        let reviewLog = [];
+
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const progEl = document.getElementById('timer-progress');
+        const summaryEl = document.getElementById('summary');
+        const restartBtn = document.getElementById('restartBtn');
+        const difficultyEl = document.getElementById('difficulty');
+
+        restartBtn.onclick = () => startQuiz();
+
+        function startQuiz() {
+            document.getElementById("startScreen").style.display = "none";
+            document.getElementById("quizUI").style.display = "block";
+            init();
+        }
+
+        function init() {
+            score = total = correct = wrong = 0;
+            timeLeft = 30;
+            reviewLog = [];
+
+            summaryEl.style.display = 'none';
+            restartBtn.style.display = 'none';
+            scoreEl.textContent = `Score: ${score}`;
+            timerEl.textContent = `Time Left: ${timeLeft}s`;
+            progEl.style.width = '100%';
+
+            generateQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = `Time Left: ${timeLeft}s`;
+                progEl.style.width = (timeLeft / 30 * 100) + '%';
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        function generateQuestion() {
+            const range = difficultyEl.value === 'easy' ? 10 :
+                difficultyEl.value === 'medium' ? 20 : 50;
+
+            const a = Math.floor(Math.random() * range) + 1;
+            const b = Math.floor(Math.random() * range) + 1;
+            const ops = ['+', '-', '×', '÷'];
+            const op = ops[Math.floor(Math.random() * ops.length)];
+            let ans;
+
+            switch (op) {
+                case '+': ans = a + b; break;
+                case '-': ans = a - b; break;
+                case '×': ans = a * b; break;
+                case '÷': ans = parseFloat((a / b).toFixed(1)); break;
+            }
+
+            correctAnswer = ans;
+            document.getElementById('question').textContent = `What is ${a} ${op} ${b}?`;
+            renderOptions(ans, range);
+        }
+
+        function renderOptions(ans, range) {
+            const opts = new Set([ans]);
+            while (opts.size < 4) {
+                let wrongOpt = ans + (Math.floor(Math.random() * (range * 2 + 1)) - range);
+                wrongOpt = parseFloat(wrongOpt.toFixed(1));
+                if (wrongOpt !== ans) opts.add(wrongOpt);
+            }
+
+            const shuffled = Array.from(opts).sort(() => Math.random() - 0.5);
+            const container = document.getElementById('options');
+            container.innerHTML = '';
+            shuffled.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.textContent = opt;
+                btn.className = 'option';
+                btn.onclick = () => checkAnswer(opt);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(val) {
+            total++;
+            const questionText = document.getElementById('question').textContent;
+            const wasCorrect = (val === correctAnswer);
+            reviewLog.push({ question: questionText, correctAnswer, userAnswer: val, correct: wasCorrect });
+
+            const buttons = document.querySelectorAll(".option");
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (wasCorrect) {
+                score++; correct++;
+                scoreEl.textContent = `Score: ${score}`;
+                generateQuestion();
+            } else {
+                wrong++;
+                buttons.forEach(btn => {
+                    if (parseFloat(btn.textContent) === correctAnswer) {
+                        btn.style.background = "#28a745";
+                    } else if (parseFloat(btn.textContent) === val) {
+                        btn.style.background = "#dc3545";
+                    }
+                });
+
+                setTimeout(() => {
+                    buttons.forEach(btn => {
+                        btn.style.background = "#2d2d2d";
+                        btn.disabled = false;
+                    });
+                    scoreEl.textContent = `Score: ${score}`;
+                    generateQuestion();
+                }, 1000);
+            }
+        }
+
+        function endQuiz() {
+            document.getElementById("question").textContent = "⏱️ Time's up!";
+            document.getElementById("options").innerHTML = '';
+            summaryEl.innerHTML = `
+      ✅ Correct: ${correct}<br>
+      ❌ Wrong: ${wrong}<br>
+      ❓ Total Questions: ${total}<br>
+      🎯 Final Score: ${score}<br><br>
+      <strong>📘 Review Answers:</strong><br><br>
+    `;
+
+            reviewLog.forEach((entry, i) => {
+                summaryEl.innerHTML += `
+        Q${i + 1}: ${entry.question}<br>
+        Your Answer: <span style="color: ${entry.correct ? 'lime' : 'red'}">${entry.userAnswer}</span><br>
+        Correct Answer: <span style="color: lightblue">${entry.correctAnswer}</span><br><br>
+      `;
+            });
+
+            summaryEl.innerHTML += `🏆 High Score: ${loadHighScore()}`;
+            summaryEl.style.display = "block";
+            restartBtn.style.display = "inline-block";
+            saveHighScore();
+        }
+
+        function saveHighScore() {
+            const prev = parseInt(localStorage.getItem('quizHighScore')) || 0;
+            if (score > prev) {
+                localStorage.setItem('quizHighScore', score);
+            }
+        }
+
+        function loadHighScore() {
+            return parseInt(localStorage.getItem('quizHighScore')) || 0;
+        }
+    </script>
+
+</body>
+
+</html>

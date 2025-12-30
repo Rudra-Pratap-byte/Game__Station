@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe Game - Dark Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #ffffff;
+        }
+
+        .game-container {
+            background: linear-gradient(145deg, #1e1e2f, #2a2a3e);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: #b8b8cc;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .game-info {
+            margin-bottom: 20px;
+        }
+
+        .current-player {
+            font-size: 1.2em;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        .player-x {
+            color: #ff6b6b;
+        }
+
+        .player-o {
+            color: #4ecdc4;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 300px;
+            background: linear-gradient(145deg, #2a2a3e, #1e1e2f);
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #3a3a4e, #2e2e42);
+            border: none;
+            border-radius: 10px;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow:
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .cell:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 6px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            background: linear-gradient(145deg, #4a4a5e, #3e3e52);
+        }
+
+        .cell.x {
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .cell.o {
+            color: #4ecdc4;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }
+
+        .cell:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .winning-cell {
+            background: linear-gradient(145deg, #45b7d1, #2ecc71) !important;
+            color: white !important;
+            animation: pulse 0.5s ease-in-out;
+            box-shadow:
+                0 0 20px rgba(46, 204, 113, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .game-status {
+            font-size: 1.3em;
+            margin: 20px 0;
+            min-height: 30px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .winner {
+            color: #2ecc5d;
+            animation: celebrate 0.5s ease-in-out;
+            text-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+        }
+
+        .draw {
+            color: #f39c12;
+            text-shadow: 0 0 15px rgba(243, 156, 18, 0.5);
+        }
+
+        @keyframes celebrate {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .controls {
+            margin-top: 25px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+            box-shadow:
+                0 4px 15px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 6px 20px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #7d8bf0 0%, #8a5bb8 100%);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            background: linear-gradient(145deg, #2a2a3e, #1e1e2f);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .score {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            color: #b8b8cc;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .score-x {
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .score-o {
+            color: #4ecdc4;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }
+
+        .score-draw {
+            color: #f39c12;
+            text-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .cell {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8em;
+            }
+
+            .game-board {
+                max-width: 250px;
+            }
+
+            .btn {
+                margin: 5px;
+                padding: 10px 20px;
+            }
+        }
+
+        /* Dark mode specific enhancements */
+        .cell:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Additional glow effects for dark mode */
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0.1;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            0% {
+                opacity: 0.1;
+            }
+
+            100% {
+                opacity: 0.2;
+            }
+        }
+
+        /* Scrollbar styling for dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e2f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        a {
+            color: #553ab6;
+            text-decoration: none;
+            font-weight: bold;
+            left: -2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1>Tic Tac Toe</h1>
+        <p class="subtitle">Classic game for two players</p>
+
+        <div class="score-board">
+            <div class="score">
+                <div class="score-label">Player X</div>
+                <div class="score-value score-x" id="scoreX">0</div>
+            </div>
+            <div class="score">
+                <div class="score-label">Draws</div>
+                <div class="score-value score-draw" id="scoreDraw">0</div>
+            </div>
+            <div class="score">
+                <div class="score-label">Player O</div>
+                <div class="score-value score-o" id="scoreO">0</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div class="current-player" id="currentPlayer">
+                Current Player: <span class="player-x">X</span>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <button class="cell" data-index="0"></button>
+            <button class="cell" data-index="1"></button>
+            <button class="cell" data-index="2"></button>
+            <button class="cell" data-index="3"></button>
+            <button class="cell" data-index="4"></button>
+            <button class="cell" data-index="5"></button>
+            <button class="cell" data-index="6"></button>
+            <button class="cell" data-index="7"></button>
+            <button class="cell" data-index="8"></button>
+        </div>
+
+        <div class="game-status" id="gameStatus"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="resetGame()">🔄 New Game</button>
+            <button class="btn" onclick="resetScore()">📊 Reset Score</button>
+            <button class="btn" onclick="window.location.href='index.html'">← BACK</button>
+        </div>
+
+    </div>
+    <script>
+        class TicTacToe {
+            constructor() {
+                this.board = ['', '', '', '', '', '', '', '', ''];
+                this.currentPlayer = 'X';
+                this.gameActive = true;
+                this.scores = {
+                    X: 0,
+                    O: 0,
+                    draw: 0
+                };
+
+                this.winningConditions = [
+                    [0, 1, 2],
+                    [3, 4, 5],
+                    [6, 7, 8],
+                    [0, 3, 6],
+                    [1, 4, 7],
+                    [2, 5, 8],
+                    [0, 4, 8],
+                    [2, 4, 6]
+                ];
+
+                this.initializeGame();
+                this.loadScores();
+            }
+
+            initializeGame() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach((cell, index) => {
+                    cell.addEventListener('click', () => this.handleCellClick(index));
+                });
+                this.updateDisplay();
+            }
+
+            handleCellClick(index) {
+                if (this.board[index] !== '' || !this.gameActive) {
+                    return;
+                }
+
+                this.board[index] = this.currentPlayer;
+                this.updateDisplay();
+
+                if (this.checkWin()) {
+                    this.handleGameEnd('win');
+                } else if (this.checkDraw()) {
+                    this.handleGameEnd('draw');
+                } else {
+                    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+                    this.updateCurrentPlayerDisplay();
+                }
+            }
+
+            checkWin() {
+                return this.winningConditions.some(condition => {
+                    const [a, b, c] = condition;
+                    if (this.board[a] && this.board[a] === this.board[b] && this.board[a] === this.board[c]) {
+                        this.highlightWinningCells(condition);
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            checkDraw() {
+                return this.board.every(cell => cell !== '');
+            }
+
+            highlightWinningCells(winningCombination) {
+                winningCombination.forEach(index => {
+                    const cell = document.querySelector(`[data-index="${index}"]`);
+                    cell.classList.add('winning-cell');
+                });
+            }
+
+            handleGameEnd(result) {
+                this.gameActive = false;
+                const statusElement = document.getElementById('gameStatus');
+
+                if (result === 'win') {
+                    statusElement.textContent = `🎉 Player ${this.currentPlayer} Wins!`;
+                    statusElement.className = 'game-status winner';
+                    this.scores[this.currentPlayer]++;
+                } else {
+                    statusElement.textContent = "🤝 It's a Draw!";
+                    statusElement.className = 'game-status draw';
+                    this.scores.draw++;
+                }
+
+                this.updateScoreDisplay();
+                this.saveScores();
+
+                // Disable all cells
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.disabled = true;
+                });
+            }
+
+            updateDisplay() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach((cell, index) => {
+                    cell.textContent = this.board[index];
+                    cell.className = 'cell';
+                    if (this.board[index]) {
+                        cell.classList.add(this.board[index].toLowerCase());
+                        cell.disabled = true;
+                    } else {
+                        cell.disabled = false;
+                    }
+                });
+            }
+
+            updateCurrentPlayerDisplay() {
+                const currentPlayerElement = document.getElementById('currentPlayer');
+                const playerClass = this.currentPlayer === 'X' ? 'player-x' : 'player-o';
+                currentPlayerElement.innerHTML = `Current Player: <span class="${playerClass}">${this.currentPlayer}</span>`;
+            }
+
+            updateScoreDisplay() {
+                document.getElementById('scoreX').textContent = this.scores.X;
+                document.getElementById('scoreO').textContent = this.scores.O;
+                document.getElementById('scoreDraw').textContent = this.scores.draw;
+            }
+
+            saveScores() {
+                localStorage.setItem('ticTacToeScores', JSON.stringify(this.scores));
+            }
+
+            loadScores() {
+                const savedScores = localStorage.getItem('ticTacToeScores');
+                if (savedScores) {
+                    this.scores = JSON.parse(savedScores);
+                    this.updateScoreDisplay();
+                }
+            }
+
+            resetGame() {
+                this.board = ['', '', '', '', '', '', '', '', ''];
+                this.currentPlayer = 'X';
+                this.gameActive = true;
+
+                document.getElementById('gameStatus').textContent = '';
+                document.getElementById('gameStatus').className = 'game-status';
+
+                this.updateDisplay();
+                this.updateCurrentPlayerDisplay();
+            }
+
+            resetScores() {
+                this.scores = { X: 0, O: 0, draw: 0 };
+                this.updateScoreDisplay();
+                this.saveScores();
+            }
+        }
+
+        // Initialize game
+        let game = new TicTacToe();
+
+        // Global functions for buttons
+        function resetGame() {
+            game.resetGame();
+        }
+
+        function resetScore() {
+            game.resetScores();
+        }
+    </script>
+</body>
+
+</html>

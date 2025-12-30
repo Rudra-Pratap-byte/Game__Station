@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Runner</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #505050;
+            --card-hover: #2a2a2a;
+            --border: #333333;
+            --glow: rgba(80, 80, 80, 0.3);
+            --game-color: #3498db;
+            --game-color-glow: rgba(52, 152, 219, 0.15);
+            --wall-color: #2c3e50;
+            --path-color: #34495e;
+            --player-color: #e74c3c;
+            --exit-color: #2ecc71;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+            padding: 30px;
+            background-image:
+                radial-gradient(circle at 20% 20%, var(--glow) 0%, transparent 25%),
+                radial-gradient(circle at 80% 80%, var(--glow) 0%, transparent 25%);
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 90%;
+            background-color: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-top: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+            text-shadow: 0 0 20px var(--glow);
+        }
+
+        .game-info {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .maze-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .maze {
+            display: grid;
+            gap: 1px;
+            background-color: var(--border);
+            padding: 1px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: var(--path-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .cell.wall {
+            background-color: var(--wall-color);
+        }
+
+        .cell.player {
+            background-color: var(--player-color);
+            border-radius: 50%;
+        }
+
+        .cell.exit {
+            background-color: var(--exit-color);
+            border-radius: 4px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .touch-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1rem;
+            max-width: 200px;
+        }
+
+        .touch-controls button {
+            padding: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .touch-controls button.up {
+            grid-column: 2;
+        }
+
+        .touch-controls button.left {
+            grid-column: 1;
+        }
+
+        .touch-controls button.right {
+            grid-column: 3;
+        }
+
+        .touch-controls button.down {
+            grid-column: 2;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--game-color);
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--card-hover);
+            transform: translateY(-2px);
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            min-height: 2rem;
+            color: var(--text-primary);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: var(--card-hover);
+        }
+
+        @media (max-width: 768px) {
+            .touch-controls {
+                display: grid;
+            }
+
+            .game-info p {
+                margin-bottom: 1rem;
+            }
+
+            .cell {
+                width: 25px;
+                height: 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .game-container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .cell {
+                width: 20px;
+                height: 20px;
+            }
+
+            .touch-controls button {
+                padding: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Back to Game Hub</a>
+    
+    <div class="game-container">
+        <h1>Maze Runner</h1>
+        <div class="game-info">
+            <p>Use arrow keys or WASD to navigate through the maze</p>
+            <p>Find the green exit to win!</p>
+        </div>
+        
+        <div class="maze-container">
+            <div class="maze" id="maze"></div>
+        </div>
+
+        <div class="controls">
+            <button id="newGameBtn">New Game</button>
+            <div class="touch-controls">
+                <button class="up">↑</button>
+                <button class="left">←</button>
+                <button class="right">→</button>
+                <button class="down">↓</button>
+            </div>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        class Maze {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.grid = [];
+                this.player = { x: 1, y: 1 };
+                this.exit = { x: width - 2, y: height - 2 };
+                this.initialize();
+            }
+
+            initialize() {
+                // Initialize grid with walls
+                for (let y = 0; y < this.height; y++) {
+                    this.grid[y] = [];
+                    for (let x = 0; x < this.width; x++) {
+                        this.grid[y][x] = 1; // 1 represents wall
+                    }
+                }
+
+                // Generate maze using recursive backtracking
+                this.generateMaze(1, 1);
+                
+                // Set start and end points
+                this.grid[this.player.y][this.player.x] = 0;
+                this.grid[this.exit.y][this.exit.x] = 0;
+            }
+
+            generateMaze(x, y) {
+                this.grid[y][x] = 0; // 0 represents path
+
+                const directions = [
+                    [0, 2],  // right
+                    [2, 0],  // down
+                    [0, -2], // left
+                    [-2, 0]  // up
+                ];
+
+                // Shuffle directions
+                for (let i = directions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [directions[i], directions[j]] = [directions[j], directions[i]];
+                }
+
+                for (const [dx, dy] of directions) {
+                    const newX = x + dx;
+                    const newY = y + dy;
+
+                    if (newX > 0 && newX < this.width - 1 && newY > 0 && newY < this.height - 1
+                        && this.grid[newY][newX] === 1) {
+                        this.grid[y + dy/2][x + dx/2] = 0;
+                        this.generateMaze(newX, newY);
+                    }
+                }
+            }
+
+            movePlayer(dx, dy) {
+                const newX = this.player.x + dx;
+                const newY = this.player.y + dy;
+
+                if (newX >= 0 && newX < this.width && newY >= 0 && newY < this.height
+                    && this.grid[newY][newX] === 0) {
+                    this.player.x = newX;
+                    this.player.y = newY;
+                    return true;
+                }
+                return false;
+            }
+
+            isComplete() {
+                return this.player.x === this.exit.x && this.player.y === this.exit.y;
+            }
+        }
+
+        class MazeGame {
+            constructor() {
+                this.maze = new Maze(21, 21);
+                this.mazeElement = document.getElementById('maze');
+                this.messageElement = document.getElementById('message');
+                this.newGameBtn = document.getElementById('newGameBtn');
+                this.setupEventListeners();
+                this.render();
+            }
+
+            setupEventListeners() {
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    let moved = false;
+                    switch(e.key) {
+                        case 'ArrowUp':
+                        case 'w':
+                        case 'W':
+                            moved = this.maze.movePlayer(0, -1);
+                            break;
+                        case 'ArrowDown':
+                        case 's':
+                        case 'S':
+                            moved = this.maze.movePlayer(0, 1);
+                            break;
+                        case 'ArrowLeft':
+                        case 'a':
+                        case 'A':
+                            moved = this.maze.movePlayer(-1, 0);
+                            break;
+                        case 'ArrowRight':
+                        case 'd':
+                        case 'D':
+                            moved = this.maze.movePlayer(1, 0);
+                            break;
+                    }
+
+                    if (moved) {
+                        this.render();
+                        if (this.maze.isComplete()) {
+                            this.messageElement.textContent = 'Congratulations! You found the exit!';
+                            this.messageElement.style.color = '#2ecc71';
+                        }
+                    }
+                });
+
+                // Touch controls
+                const touchControls = document.querySelector('.touch-controls');
+                touchControls.addEventListener('click', (e) => {
+                    if (!e.target.matches('button')) return;
+                    
+                    let moved = false;
+                    const direction = e.target.className;
+
+                    switch(direction) {
+                        case 'up':
+                            moved = this.maze.movePlayer(0, -1);
+                            break;
+                        case 'down':
+                            moved = this.maze.movePlayer(0, 1);
+                            break;
+                        case 'left':
+                            moved = this.maze.movePlayer(-1, 0);
+                            break;
+                        case 'right':
+                            moved = this.maze.movePlayer(1, 0);
+                            break;
+                    }
+
+                    if (moved) {
+                        this.render();
+                        if (this.maze.isComplete()) {
+                            this.messageElement.textContent = 'Congratulations! You found the exit!';
+                            this.messageElement.style.color = '#2ecc71';
+                        }
+                    }
+                });
+
+                this.newGameBtn.addEventListener('click', () => {
+                    this.maze = new Maze(21, 21);
+                    this.messageElement.textContent = '';
+                    this.render();
+                });
+            }
+
+            render() {
+                this.mazeElement.style.gridTemplateColumns = `repeat(${this.maze.width}, 30px)`;
+                this.mazeElement.innerHTML = '';
+
+                for (let y = 0; y < this.maze.height; y++) {
+                    for (let x = 0; x < this.maze.width; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+
+                        if (this.maze.grid[y][x] === 1) {
+                            cell.classList.add('wall');
+                        } else if (x === this.maze.player.x && y === this.maze.player.y) {
+                            cell.classList.add('player');
+                        } else if (x === this.maze.exit.x && y === this.maze.exit.y) {
+                            cell.classList.add('exit');
+                        }
+
+                        this.mazeElement.appendChild(cell);
+                    }
+                }
+            }
+        }
+
+        // Start the game
+        new MazeGame();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dots and Boxes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #54a0ff;
+            --dot-color: #ffffff;
+            --line-color: #505050; 
+            --box-color: #54a0ff;
+            --player1-color: #54a0ff;
+            --player2-color: #ff5454;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .player {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .player.active {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .player.extra-turn {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .score {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .game-board {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .dots-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 1rem;
+        }
+
+        .line-space {
+            position: absolute;
+            background-color: transparent;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            z-index: 1;
+        }
+
+        .line-space:hover {
+            background-color: rgba(84, 160, 255, 0.2);
+        }
+
+        .line-space.horizontal {
+            height: 20px;
+            width: calc(100% / 5);
+            transform: translateY(-50%);
+        }
+
+        .line-space.vertical {
+            width: 20px;
+            height: calc(100% / 5);
+            transform: translateX(-50%);
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: var(--dot-color);
+            border-radius: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .line {
+            position: absolute;
+            background-color: var(--line-color);
+            transform-origin: left center;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            height: 4px;
+            width: 0;
+            z-index: 1;
+        }
+
+        .box {
+            position: absolute;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .box.completed.player1 {
+            border-color: var(--player1-color);
+            background-color: var(--player1-color);
+            opacity: 0.7;
+        }
+
+        .box.completed.player2 {
+            border-color: var(--player2-color);
+            background-color: var(--player2-color);
+            opacity: 0.7;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(84, 161, 255, 0.541);
+        }
+
+        .game-over-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over-popup h2 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .game-over-popup p {
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+        }
+
+        .game-over-popup .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .game-over-popup button {
+            min-width: 120px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 1rem; }
+            .game-board { padding: 1rem; }
+            .dots-container { gap: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dots and Boxes</h1>
+        
+        <div class="game-info">
+            <div class="player" id="player1">Player 1: <span class="score">0</span></div>
+            <div class="player" id="player2">Player 2: <span class="score">0</span></div>
+        </div>
+
+        <div class="game-board">
+            <div class="dots-container" id="dotsContainer"></div>
+        </div>
+
+        <div class="controls">
+            <button id="newGameBtn">New Game</button>
+            <button id="gameHubBtn">Back to Game Hub</button>
+        </div>
+
+        <div class="overlay" id="overlay"></div>
+        <div class="game-over-popup" id="gameOverPopup">
+            <h2>Game Over!</h2>
+            <p id="gameOverMessage"></p>
+            <div class="buttons">
+                <button id="restartBtn">Play Again</button>
+                <button id="gameHubBtn2">Game Hub</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DotsAndBoxes {
+            constructor() {
+                this.gridSize = 6;
+                this.dots = [];
+                this.lines = [];
+                this.boxes = [];
+                this.currentPlayer = 1;
+                this.scores = { 1: 0, 2: 0 };
+                this.gameOver = false;
+                
+                this.setupGame();
+                this.setupControls();
+            }
+
+            setupGame() {
+                this.createDots();
+                this.createBoxes();
+                this.updatePlayerDisplay();
+            }
+
+            createDots() {
+                const container = document.getElementById('dotsContainer');
+                container.innerHTML = '';
+
+                // Create dots
+                for (let row = 0; row < this.gridSize; row++) {
+                    for (let col = 0; col < this.gridSize; col++) {
+                        const dot = document.createElement('div');
+                        dot.className = 'dot';
+                        dot.style.left = `${(col / (this.gridSize - 1)) * 100}%`;
+                        dot.style.top = `${(row / (this.gridSize - 1)) * 100}%`;
+                        container.appendChild(dot);
+                        this.dots.push({ row, col, element: dot });
+                    }
+                }
+
+                // Create horizontal line spaces
+                for (let row = 0; row < this.gridSize; row++) {
+                    for (let col = 0; col < this.gridSize - 1; col++) {
+                        const lineSpace = document.createElement('div');
+                        lineSpace.className = 'line-space horizontal';
+                        lineSpace.style.left = `${(col / (this.gridSize - 1)) * 100}%`;
+                        lineSpace.style.top = `${(row / (this.gridSize - 1)) * 100}%`;
+                        lineSpace.dataset.row = row;
+                        lineSpace.dataset.col = col;
+                        lineSpace.dataset.type = 'horizontal';
+                        container.appendChild(lineSpace);
+                    }
+                }
+
+                // Create vertical line spaces
+                for (let row = 0; row < this.gridSize - 1; row++) {
+                    for (let col = 0; col < this.gridSize; col++) {
+                        const lineSpace = document.createElement('div');
+                        lineSpace.className = 'line-space vertical';
+                        lineSpace.style.left = `${(col / (this.gridSize - 1)) * 100}%`;
+                        lineSpace.style.top = `${(row / (this.gridSize - 1)) * 100}%`;
+                        lineSpace.dataset.row = row;
+                        lineSpace.dataset.col = col;
+                        lineSpace.dataset.type = 'vertical';
+                        container.appendChild(lineSpace);
+                    }
+                }
+            }
+
+            createBoxes() {
+                const container = document.getElementById('dotsContainer');
+                this.boxes = [];
+
+                for (let row = 0; row < this.gridSize - 1; row++) {
+                    for (let col = 0; col < this.gridSize - 1; col++) {
+                        const box = document.createElement('div');
+                        box.className = 'box';
+                        box.style.left = `${(col / (this.gridSize - 1)) * 100}%`;
+                        box.style.top = `${(row / (this.gridSize - 1)) * 100}%`;
+                        box.style.width = `${(1 / (this.gridSize - 1)) * 100}%`;
+                        box.style.height = `${(1 / (this.gridSize - 1)) * 100}%`;
+                        container.appendChild(box);
+                        this.boxes.push({
+                            row,
+                            col,
+                            element: box,
+                            lines: [],
+                            completed: false
+                        });
+                    }
+                }
+            }
+
+            setupControls() {
+                document.getElementById('newGameBtn').addEventListener('click', () => {
+                    this.resetGame();
+                });
+
+                document.getElementById('gameHubBtn').addEventListener('click', () => {
+                    window.location.href = 'index.html';
+                });
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.resetGame();
+                    this.hideGameOverPopup();
+                });
+
+                document.getElementById('gameHubBtn2').addEventListener('click', () => {
+                    window.location.href = 'index.html';
+                });
+
+                document.getElementById('dotsContainer').addEventListener('click', (e) => {
+                    if (this.gameOver) return;
+                    
+                    const lineSpace = e.target.closest('.line-space');
+                    if (!lineSpace) return;
+
+                    const row = parseInt(lineSpace.dataset.row);
+                    const col = parseInt(lineSpace.dataset.col);
+                    const type = lineSpace.dataset.type;
+
+                    if (type === 'horizontal') {
+                        if (!this.lineExists(row, col, row, col + 1)) {
+                            this.createLine(row, col, row, col + 1);
+                        }
+                    } else {
+                        if (!this.lineExists(row, col, row + 1, col)) {
+                            this.createLine(row, col, row + 1, col);
+                        }
+                    }
+                });
+            }
+
+            lineExists(row1, col1, row2, col2) {
+                return this.lines.some(line => 
+                    (line.row1 === row1 && line.col1 === col1 && line.row2 === row2 && line.col2 === col2) ||
+                    (line.row1 === row2 && line.col1 === col2 && line.row2 === row1 && line.col2 === col1)
+                );
+            }
+
+            createLine(row1, col1, row2, col2) {
+                const line = {
+                    row1, col1, row2, col2,
+                    element: document.createElement('div')
+                };
+                line.element.className = 'line';
+                
+                const container = document.getElementById('dotsContainer');
+                container.appendChild(line.element);
+                
+                this.lines.push(line);
+                this.updateLinePosition(line);
+                this.checkBoxes();
+                
+                if (!this.checkBoxes()) {
+                    this.switchPlayer();
+                }
+            }
+
+            updateLinePosition(line) {
+                const dot1 = this.dots.find(d => d.row === line.row1 && d.col === line.col1);
+                const dot2 = this.dots.find(d => d.row === line.row2 && d.col === line.col2);
+                
+                const container = document.getElementById('dotsContainer');
+                const containerRect = container.getBoundingClientRect();
+                const dot1Rect = dot1.element.getBoundingClientRect();
+                const dot2Rect = dot2.element.getBoundingClientRect();
+                
+                const startX = dot1Rect.left + dot1Rect.width / 2 - containerRect.left;
+                const startY = dot1Rect.top + dot1Rect.height / 2 - containerRect.top;
+                const endX = dot2Rect.left + dot2Rect.width / 2 - containerRect.left;
+                const endY = dot2Rect.top + dot2Rect.height / 2 - containerRect.top;
+                
+                const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                
+                line.element.style.width = `${length}px`;
+                line.element.style.left = `${startX}px`;
+                line.element.style.top = `${startY}px`;
+                line.element.style.transform = `rotate(${angle}deg)`;
+                line.element.style.height = '4px';
+            }
+
+            checkBoxes() {
+                let boxCompleted = false;
+                
+                for (const box of this.boxes) {
+                    if (box.completed) continue;
+                    
+                    const lines = this.getBoxLines(box);
+                    if (lines.length === 4) {
+                        box.completed = true;
+                        box.element.classList.add('completed');
+                        box.element.classList.add(`player${this.currentPlayer}`);
+                        this.scores[this.currentPlayer]++;
+                        this.updateScores();
+                        boxCompleted = true;
+                        
+                        // Add extra turn indicator
+                        const playerElement = document.getElementById(`player${this.currentPlayer}`);
+                        playerElement.classList.add('extra-turn');
+                        setTimeout(() => {
+                            playerElement.classList.remove('extra-turn');
+                        }, 1000);
+                    }
+                }
+                
+                if (this.checkGameOver()) {
+                    this.endGame();
+                }
+                
+                return boxCompleted;
+            }
+
+            getBoxLines(box) {
+                const { row, col } = box;
+                return this.lines.filter(line => 
+                    (line.row1 === row && line.col1 === col && line.row2 === row && line.col2 === col + 1) ||
+                    (line.row1 === row && line.col1 === col + 1 && line.row2 === row && line.col2 === col) ||
+                    (line.row1 === row && line.col1 === col && line.row2 === row + 1 && line.col2 === col) ||
+                    (line.row1 === row + 1 && line.col1 === col && line.row2 === row && line.col2 === col) ||
+                    (line.row1 === row + 1 && line.col1 === col && line.row2 === row + 1 && line.col2 === col + 1) ||
+                    (line.row1 === row + 1 && line.col1 === col + 1 && line.row2 === row + 1 && line.col2 === col) ||
+                    (line.row1 === row && line.col1 === col + 1 && line.row2 === row + 1 && line.col2 === col + 1) ||
+                    (line.row1 === row + 1 && line.col1 === col + 1 && line.row2 === row && line.col2 === col + 1)
+                );
+            }
+
+            checkGameOver() {
+                return this.boxes.every(box => box.completed);
+            }
+
+            switchPlayer() {
+                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+                this.updatePlayerDisplay();
+            }
+
+            updatePlayerDisplay() {
+                const player1 = document.getElementById('player1');
+                const player2 = document.getElementById('player2');
+                
+                player1.classList.remove('active', 'extra-turn');
+                player2.classList.remove('active', 'extra-turn');
+                
+                if (this.currentPlayer === 1) {
+                    player1.classList.add('active');
+                } else {
+                    player2.classList.add('active');
+                }
+            }
+
+            updateScores() {
+                document.querySelector('#player1 .score').textContent = this.scores[1];
+                document.querySelector('#player2 .score').textContent = this.scores[2];
+            }
+
+            endGame() {
+                this.gameOver = true;
+                const winner = this.scores[1] > this.scores[2] ? 1 : 2;
+                const message = this.scores[1] === this.scores[2] 
+                    ? "It's a tie!" 
+                    : `Player ${winner} wins with ${this.scores[winner]} points!`;
+                
+                document.getElementById('gameOverMessage').textContent = message;
+                this.showGameOverPopup();
+            }
+
+            showGameOverPopup() {
+                document.getElementById('overlay').style.display = 'block';
+                document.getElementById('gameOverPopup').style.display = 'block';
+            }
+
+            hideGameOverPopup() {
+                document.getElementById('overlay').style.display = 'none';
+                document.getElementById('gameOverPopup').style.display = 'none';
+            }
+
+            resetGame() {
+                this.lines = [];
+                this.boxes.forEach(box => {
+                    box.completed = false;
+                    box.element.classList.remove('completed', 'player1', 'player2');
+                });
+                this.currentPlayer = 1;
+                this.scores = { 1: 0, 2: 0 };
+                this.gameOver = false;
+                this.updateScores();
+                this.updatePlayerDisplay();
+                
+                const container = document.getElementById('dotsContainer');
+                container.querySelectorAll('.line').forEach(line => line.remove());
+                
+                this.hideGameOverPopup();
+            }
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', () => {
+            new DotsAndBoxes();
+        });
+
+        // redraw lines when resized to keep positions correct
+        window.addEventListener('resize', () => {
+            // recompute positions of lines/boxes
+            const instance = window.dotsAndBoxesInstance;
+            if (instance && instance.lines) {
+                instance.lines.forEach(line => instance.updateLinePosition(line));
+            }
+        });
+    </script>
+</body>
+</html>

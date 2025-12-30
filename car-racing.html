@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Racing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(45deg, #ff3366, #ff6b6b);
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            z-index: 9999;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+        }
+
+        #gameContainer {
+            position: relative;
+            width: min(800px, 94vw);
+            height: min(600px, 70vh);
+            background: #333;
+            border: 2px solid #444;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #road {
+            position: absolute;
+            width: 100%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                0deg,
+                #333 0px,
+                #333 50px,
+                #444 50px,
+                #444 100px
+            );
+            animation: moveRoad 1s linear infinite;
+        }
+
+        @keyframes moveRoad {
+            from { transform: translateY(0); }
+            to { transform: translateY(100px); }
+        }
+
+        #player {
+            position: absolute;
+            width: 40px;
+            height: 70px;
+            background: linear-gradient(45deg, #ff3366, #ff6b6b);
+            border-radius: 5px;
+            bottom: 50px;
+            left: calc(50% - 20px);
+            transition: transform 0.2s;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 40px;
+            height: 70px;
+            background: linear-gradient(45deg, #666, #888);
+            border-radius: 5px;
+        }
+
+        .powerup {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffff00, #ff8800);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+        }
+
+        #speed {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 40px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            color: #fff;
+            border: 2px solid #ff3366;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        #gameOver h2 {
+            color: #ff3366;
+            margin-bottom: 15px;
+            font-size: 28px;
+            text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+        }
+
+        #finalScore {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 18px;
+            background: linear-gradient(45deg, #ff3366, #ff6b6b);
+            border: none;
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
+        }
+
+        .smoke {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: smoke 1s forwards;
+        }
+
+        @keyframes smoke {
+            0% { transform: scale(1) translateY(0); opacity: 0.3; }
+            100% { transform: scale(2) translateY(-30px); opacity: 0; }
+        }
+
+        @media (max-width: 480px) {
+            #gameContainer { height: 60vh; }
+            .back-button { padding: 8px 12px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">Back to Games</a>
+    <div id="gameContainer">
+        <div id="road"></div>
+        <div id="player"></div>
+        <div id="score">Score: 0</div>
+        <div id="speed">Speed: 0 km/h</div>
+        <div id="gameOver">
+            <h2>Game Over!</h2>
+            <p id="finalScore"></p>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('gameContainer');
+        const player = document.getElementById('player');
+        const scoreDisplay = document.getElementById('score');
+        const speedDisplay = document.getElementById('speed');
+        const gameOverScreen = document.getElementById('gameOver');
+
+        let score = 0;
+        let speed = 0;
+        let maxSpeed = 200;
+        let acceleration = 0.5;
+        let deceleration = 0.3;
+        let obstacles = [];
+        let powerups = [];
+        let isGameOver = false;
+        let animationFrame;
+        let roadSpeed = 1;
+        let lastSmoke = 0;
+
+        // Player movement
+        let playerX = parseInt(window.getComputedStyle(player).left);
+        const keys = {
+            ArrowLeft: false,
+            ArrowRight: false,
+            ArrowUp: false,
+            ArrowDown: false
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.code)) {
+                keys[e.code] = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.code)) {
+                keys[e.code] = false;
+            }
+        });
+
+        function createSmoke() {
+            if (Date.now() - lastSmoke > 100) {
+                const smoke = document.createElement('div');
+                smoke.className = 'smoke';
+                smoke.style.left = (parseInt(player.style.left) + 15) + 'px';
+                smoke.style.top = (parseInt(player.style.top) - 10) + 'px';
+                gameContainer.appendChild(smoke);
+                setTimeout(() => smoke.remove(), 1000);
+                lastSmoke = Date.now();
+            }
+        }
+
+        function updatePlayer() {
+            if (keys.ArrowLeft && playerX > 0) {
+                playerX -= 5;
+                player.style.transform = 'rotate(-15deg)';
+            }
+            if (keys.ArrowRight && playerX < gameContainer.clientWidth - 40) {
+                playerX += 5;
+                player.style.transform = 'rotate(15deg)';
+            }
+            if (!keys.ArrowLeft && !keys.ArrowRight) {
+                player.style.transform = 'rotate(0deg)';
+            }
+            if (keys.ArrowUp && speed < maxSpeed) {
+                speed += acceleration;
+            }
+            if (keys.ArrowDown && speed > 0) {
+                speed -= deceleration;
+            }
+            if (!keys.ArrowUp && speed > 0) {
+                speed -= deceleration / 2;
+            }
+
+            player.style.left = playerX + 'px';
+            speedDisplay.textContent = `Speed: ${Math.round(speed)} km/h`;
+            roadSpeed = 1 + (speed / maxSpeed) * 2;
+            document.getElementById('road').style.animationDuration = (1 / roadSpeed) + 's';
+
+            if (speed > 100) {
+                createSmoke();
+            }
+        }
+
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            obstacle.style.left = Math.random() * (gameContainer.clientWidth - 40) + 'px';
+            obstacle.style.top = '-70px';
+            gameContainer.appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        function createPowerup() {
+            const powerup = document.createElement('div');
+            powerup.className = 'powerup';
+            powerup.style.left = Math.random() * (gameContainer.clientWidth - 30) + 'px';
+            powerup.style.top = '-30px';
+            gameContainer.appendChild(powerup);
+            powerups.push(powerup);
+        }
+
+        function updateObstacles() {
+            obstacles.forEach((obstacle, index) => {
+                let top = parseInt(obstacle.style.top) + roadSpeed * 2;
+                if (top > gameContainer.clientHeight) {
+                    obstacle.remove();
+                    obstacles.splice(index, 1);
+                    score += Math.round(speed / 10);
+                    scoreDisplay.textContent = `Score: ${score}`;
+                } else {
+                    obstacle.style.top = top + 'px';
+                    checkCollision(obstacle);
+                }
+            });
+        }
+
+        function updatePowerups() {
+            powerups.forEach((powerup, index) => {
+                let top = parseInt(powerup.style.top) + roadSpeed * 2;
+                if (top > gameContainer.clientHeight) {
+                    powerup.remove();
+                    powerups.splice(index, 1);
+                } else {
+                    powerup.style.top = top + 'px';
+                    checkPowerupCollision(powerup, index);
+                }
+            });
+        }
+
+        function checkCollision(obstacle) {
+            const playerRect = player.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            if (!(playerRect.right < obstacleRect.left || 
+                playerRect.left > obstacleRect.right || 
+                playerRect.bottom < obstacleRect.top || 
+                playerRect.top > obstacleRect.bottom)) {
+                gameOver();
+            }
+        }
+
+        function checkPowerupCollision(powerup, index) {
+            const playerRect = player.getBoundingClientRect();
+            const powerupRect = powerup.getBoundingClientRect();
+
+            if (!(playerRect.right < powerupRect.left || 
+                playerRect.left > powerupRect.right || 
+                playerRect.bottom < powerupRect.top || 
+                playerRect.top > powerupRect.bottom)) {
+                powerup.remove();
+                powerups.splice(index, 1);
+                applyPowerup();
+            }
+        }
+
+        function applyPowerup() {
+            maxSpeed += 20;
+            setTimeout(() => maxSpeed -= 20, 5000);
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            gameOverScreen.style.display = 'block';
+            document.getElementById('finalScore').textContent = `Final Score: ${score}`;
+            cancelAnimationFrame(animationFrame);
+        }
+
+        function restartGame() {
+            // Reset game state
+            score = 0;
+            speed = 0;
+            maxSpeed = 200;
+            isGameOver = false;
+            playerX = parseInt(window.getComputedStyle(player).left);
+            
+            // Clear obstacles and powerups
+            obstacles.forEach(obstacle => obstacle.remove());
+            powerups.forEach(powerup => powerup.remove());
+            obstacles = [];
+            powerups = [];
+
+            // Reset UI
+            scoreDisplay.textContent = 'Score: 0';
+            speedDisplay.textContent = 'Speed: 0 km/h';
+            gameOverScreen.style.display = 'none';
+
+            // Start game loop
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!isGameOver) {
+                updatePlayer();
+                updateObstacles();
+                updatePowerups();
+
+                if (Math.random() < 0.02) createObstacle();
+                if (Math.random() < 0.005) createPowerup();
+
+                animationFrame = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Start the game
+        gameLoop();
+
+        window.addEventListener('resize', () => {
+            // keep player inside container when size changes
+            const maxLeft = gameContainer.clientWidth - player.clientWidth;
+            playerX = Math.min(playerX, maxLeft);
+            player.style.left = playerX + 'px';
+        });
+    </script>
+</body>
+</html>

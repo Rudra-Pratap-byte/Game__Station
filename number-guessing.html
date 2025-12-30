@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #505050;
+            --card-hover: #2a2a2a;
+            --border: #333333;
+            --glow: rgba(80, 80, 80, 0.3);
+            --game-color: #9b59b6;
+            --game-color-glow: rgba(155, 89, 182, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+            padding: 30px;
+            background-image:
+                radial-gradient(circle at 20% 20%, var(--glow) 0%, transparent 25%),
+                radial-gradient(circle at 80% 80%, var(--glow) 0%, transparent 25%);
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            max-width: 600px;
+            width: 90%;
+            background-color: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-top: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+            text-shadow: 0 0 20px var(--glow);
+        }
+
+        .game-info {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--game-color);
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--card-hover);
+            transform: translateY(-2px);
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            min-height: 2rem;
+        }
+
+        .success {
+            color: #2ecc71;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .hint {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: var(--card-hover);
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .game-container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+            #guessInput { font-size: 1rem; padding: 0.85rem; }
+            #guessButton { padding: 0.85rem; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Back to Game Hub</a>
+    
+    <div class="game-container">
+        <h1>Number Guessing Game</h1>
+        <div class="game-info">
+            <p>I'm thinking of a number between 1 and 50.</p>
+            <p>Can you guess it?</p>
+        </div>
+        
+        <div class="game-area">
+            <div class="input-group">
+                <input type="number" id="guessInput" min="1" max="50" placeholder="Enter your guess">
+                <button id="guessButton">Guess</button>
+            </div>
+            <div class="message" id="message"></div>
+            <div class="hint" id="hint"></div>
+        </div>
+    </div>
+
+    <script>
+        let targetNumber = Math.floor(Math.random() * 50) + 1;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        const guessInput = document.getElementById('guessInput');
+        const guessButton = document.getElementById('guessButton');
+        const message = document.getElementById('message');
+        const hint = document.getElementById('hint');
+
+        function updateHint(guess) {
+            if (guess < targetNumber) {
+                hint.textContent = 'Try a higher number!';
+            } else {
+                hint.textContent = 'Try a lower number!';
+            }
+        }
+
+        function checkGuess() {
+            const guess = parseInt(guessInput.value);
+            
+            if (isNaN(guess) || guess < 1 || guess > 50) {
+                message.textContent = 'Please enter a valid number between 1 and 50';
+                message.className = 'message error';
+                return;
+            }
+
+            attempts++;
+
+            if (guess === targetNumber) {
+                message.textContent = `Congratulations! You found the number in ${attempts} attempts!`;
+                message.className = 'message success';
+                hint.textContent = '';
+                guessButton.disabled = true;
+                guessInput.disabled = true;
+            } else if (attempts >= maxAttempts) {
+                message.textContent = `Game Over! The number was ${targetNumber}`;
+                message.className = 'message error';
+                hint.textContent = '';
+                guessButton.disabled = true;
+                guessInput.disabled = true;
+            } else {
+                message.textContent = `Wrong guess! ${maxAttempts - attempts} attempts remaining`;
+                message.className = 'message error';
+                updateHint(guess);
+            }
+
+            guessInput.value = '';
+            guessInput.focus();
+        }
+
+        guessButton.addEventListener('click', checkGuess);
+        guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkGuess();
+            }
+        });
+
+        // Focus input on load
+        guessInput.focus();
+    </script>
+</body>
+</html>

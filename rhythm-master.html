@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm Master - Sound Tiles</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #25ad89;
+            --tile-1: #d32d2d;
+            --tile-2: #37b5d1;
+            --tile-3: #1dd1a1;
+            --tile-4: #e6a314;
+            --tile-5: #b947aa;
+            --tile-6: #407ac2;
+            --tile-7: #5328aa;
+            --tile-8: #e97c17;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(29, 209, 161, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sound-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .sound-tile {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sound-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .sound-tile:hover::before {
+            opacity: 1;
+        }
+
+        .sound-tile.active {
+            transform: scale(0.95);
+        }
+
+        .sound-tile.active::before {
+            opacity: 1;
+        }
+
+        .tile-1 { background-color: var(--tile-1); }
+        .tile-2 { background-color: var(--tile-2); }
+        .tile-3 { background-color: var(--tile-3); }
+        .tile-4 { background-color: var(--tile-4); }
+        .tile-5 { background-color: var(--tile-5); }
+        .tile-6 { background-color: var(--tile-6); }
+        .tile-7 { background-color: var(--tile-7); }
+        .tile-8 { background-color: var(--tile-8); }
+
+        .recording-status {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .tempo-control {
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .tempo-control input {
+            width: 200px;
+            accent-color: var(--accent);
+        }
+
+        .tempo-value {
+            min-width: 50px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .sound-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .sound-tile {
+                font-size: 1.2rem;
+            }
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Back to Game Hub</a>
+    <div class="container">
+        <h1>Rhythm Master</h1>
+        
+        <div class="tempo-control">
+            <label for="tempo">Tempo:</label>
+            <input type="range" id="tempo" min="60" max="180" value="120">
+            <span class="tempo-value">120 BPM</span>
+        </div>
+
+        <div class="controls">
+            <button id="recordBtn">Start Recording</button>
+            <button id="playBtn" disabled>Play Recording</button>
+            <button id="clearBtn" disabled>Clear Recording</button>
+        </div>
+
+        <div class="sound-board" id="soundBoard"></div>
+
+        <div class="recording-status" id="recordingStatus"></div>
+    </div>
+
+    <script>
+        class SoundBoard {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.recording = [];
+                this.isRecording = false;
+                this.startTime = 0;
+                this.tempo = 120;
+                
+                this.setupSoundBoard();
+                this.setupControls();
+            }
+
+            setupSoundBoard() {
+                const soundBoard = document.getElementById('soundBoard');
+                const sounds = [
+                    { class: 'tile-1', note: 'C4', color: 'var(--tile-1)' },
+                    { class: 'tile-2', note: 'E4', color: 'var(--tile-2)' },
+                    { class: 'tile-3', note: 'G4', color: 'var(--tile-3)' },
+                    { class: 'tile-4', note: 'B4', color: 'var(--tile-4)' },
+                    { class: 'tile-5', note: 'D5', color: 'var(--tile-5)' },
+                    { class: 'tile-6', note: 'F5', color: 'var(--tile-6)' },
+                    { class: 'tile-7', note: 'A5', color: 'var(--tile-7)' },
+                    { class: 'tile-8', note: 'C6', color: 'var(--tile-8)' }
+                ];
+
+                sounds.forEach((sound, index) => {
+                    const tile = document.createElement('div');
+                    tile.className = `sound-tile ${sound.class}`;
+                    tile.dataset.note = sound.note;
+                    tile.textContent = index + 1;
+                    
+                    tile.addEventListener('mousedown', () => this.playSound(sound.note, tile));
+                    tile.addEventListener('mouseup', () => this.stopSound(tile));
+                    tile.addEventListener('mouseleave', () => this.stopSound(tile));
+                    
+                    soundBoard.appendChild(tile);
+                });
+            }
+
+            setupControls() {
+                const recordBtn = document.getElementById('recordBtn');
+                const playBtn = document.getElementById('playBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                const tempoInput = document.getElementById('tempo');
+                const tempoValue = document.querySelector('.tempo-value');
+
+                recordBtn.addEventListener('click', () => this.toggleRecording());
+                playBtn.addEventListener('click', () => this.playRecording());
+                clearBtn.addEventListener('click', () => this.clearRecording());
+                
+                tempoInput.addEventListener('input', (e) => {
+                    this.tempo = parseInt(e.target.value);
+                    tempoValue.textContent = `${this.tempo} BPM`;
+                });
+            }
+
+            playSound(note, tile) {
+                const frequency = this.getNoteFrequency(note);
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                
+                gainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.start();
+                tile.classList.add('active');
+                
+                if (this.isRecording) {
+                    this.recording.push({
+                        note,
+                        time: this.audioContext.currentTime - this.startTime
+                    });
+                }
+                
+                oscillator.stop(this.audioContext.currentTime + 0.5);
+            }
+
+            stopSound(tile) {
+                tile.classList.remove('active');
+            }
+
+            getNoteFrequency(note) {
+                const noteMap = {
+                    'C4': 261.63, 'E4': 329.63, 'G4': 392.00, 'B4': 493.88,
+                    'D5': 587.33, 'F5': 698.46, 'A5': 880.00, 'C6': 1046.50
+                };
+                return noteMap[note] || 440;
+            }
+
+            toggleRecording() {
+                const recordBtn = document.getElementById('recordBtn');
+                const playBtn = document.getElementById('playBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                const recordingStatus = document.getElementById('recordingStatus');
+                
+                if (!this.isRecording) {
+                    this.recording = [];
+                    this.isRecording = true;
+                    this.startTime = this.audioContext.currentTime;
+                    recordBtn.textContent = 'Stop Recording';
+                    recordingStatus.textContent = 'Recording...';
+                    playBtn.disabled = true;
+                    clearBtn.disabled = true;
+                } else {
+                    this.isRecording = false;
+                    recordBtn.textContent = 'Start Recording';
+                    recordingStatus.textContent = 'Recording saved!';
+                    playBtn.disabled = false;
+                    clearBtn.disabled = false;
+                }
+            }
+
+            playRecording() {
+                if (this.recording.length === 0) return;
+                
+                const playBtn = document.getElementById('playBtn');
+                playBtn.disabled = true;
+                
+                this.recording.forEach(note => {
+                    setTimeout(() => {
+                        const tile = document.querySelector(`[data-note="${note.note}"]`);
+                        this.playSound(note.note, tile);
+                    }, note.time * 1000);
+                });
+                
+                setTimeout(() => {
+                    playBtn.disabled = false;
+                }, this.recording[this.recording.length - 1].time * 1000);
+            }
+
+            clearRecording() {
+                this.recording = [];
+                document.getElementById('recordingStatus').textContent = '';
+                document.getElementById('playBtn').disabled = true;
+                document.getElementById('clearBtn').disabled = true;
+            }
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', () => {
+            new SoundBoard();
+        });
+    </script>
+</body>
+</html> 

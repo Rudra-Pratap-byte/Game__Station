@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #f0f0f0;
+        }
+
+        #game-container {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 24px;
+        }
+
+        .score {
+            padding: 10px 20px;
+            background-color: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .choice {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-color: #1a1a1a;
+            border: 2px solid #333;
+        }
+
+        .choice:hover {
+            transform: scale(1.1);
+            background-color: #2a2a2a;
+        }
+
+        .result {
+            font-size: 24px;
+            margin: 20px 0;
+            min-height: 36px;
+        }
+
+        .vs {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .player-choice {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background-color: #1a1a1a;
+            border: 2px solid #333;
+        }
+
+        button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        button:hover {
+            background-color: #c0392b;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #333;
+        }
+
+        .back-button:hover {
+            background-color: #444;
+        }
+
+        .history {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .waiting {
+            opacity: 0.5;
+        }
+
+        .current-turn {
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        @media (max-width: 480px) {
+            #game-container {
+                padding: 12px;
+            }
+            .choice {
+                width: 72px;
+                height: 72px;
+                font-size: 32px;
+            }
+            .player-choice {
+                width: 64px;
+                height: 64px;
+                font-size: 24px;
+            }
+            .score-board { font-size: 18px; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Back to Game Hub</a>
+    <h1>Rock Paper Scissors</h1>
+    <div id="game-container">
+        <div class="score-board">
+            <div class="score">
+                <div>Player 1</div>
+                <div id="player1-score">0</div>
+            </div>
+            <div class="score">
+                <div>Player 2</div>
+                <div id="player2-score">0</div>
+            </div>
+        </div>
+
+        <div class="vs">
+            <div class="player-choice" id="player1-choice">?</div>
+            <div>VS</div>
+            <div class="player-choice" id="player2-choice">?</div>
+        </div>
+
+        <div class="result" id="result">Player 1's Turn</div>
+
+        <div class="choices">
+            <div class="choice" data-choice="rock">✊</div>
+            <div class="choice" data-choice="paper">✋</div>
+            <div class="choice" data-choice="scissors">✌️</div>
+        </div>
+
+        <button id="reset-button">Reset Game</button>
+
+        <div class="history">
+            <h3>Game History</h3>
+            <div id="history-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const player1Score = document.getElementById('player1-score');
+        const player2Score = document.getElementById('player2-score');
+        const result = document.getElementById('result');
+        const player1Choice = document.getElementById('player1-choice');
+        const player2Choice = document.getElementById('player2-choice');
+        const resetButton = document.getElementById('reset-button');
+        const historyList = document.getElementById('history-list');
+        const choices = document.querySelectorAll('.choice');
+
+        let scores = {
+            player1: 0,
+            player2: 0
+        };
+
+        let currentPlayer = 1;
+        let player1Selection = null;
+        let player2Selection = null;
+
+        const choices_emoji = {
+            rock: '✊',
+            paper: '✋',
+            scissors: '✌️'
+        };
+
+        const outcomes = {
+            rock: { scissors: 1, paper: 2, rock: 0 },
+            paper: { rock: 1, scissors: 2, paper: 0 },
+            scissors: { paper: 1, rock: 2, scissors: 0 }
+        };
+
+        function determineWinner(p1, p2) {
+            const result = outcomes[p1][p2];
+            return result === 0 ? 'tie' : result === 1 ? 'player1' : 'player2';
+        }
+
+        function updateScore(winner) {
+            if (winner === 'player1') {
+                scores.player1++;
+            } else if (winner === 'player2') {
+                scores.player2++;
+            }
+            player1Score.textContent = scores.player1;
+            player2Score.textContent = scores.player2;
+        }
+
+        function addToHistory(p1Choice, p2Choice, winner) {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            const resultText = winner === 'tie' ? "Tie" : `${winner === 'player1' ? 'Player 1' : 'Player 2'} wins`;
+            historyItem.textContent = `P1: ${choices_emoji[p1Choice]} vs P2: ${choices_emoji[p2Choice]} - ${resultText}`;
+            historyList.insertBefore(historyItem, historyList.firstChild);
+        }
+
+        function playTurn(selection) {
+            if (currentPlayer === 1) {
+                player1Selection = selection;
+                player1Choice.textContent = '?';
+                currentPlayer = 2;
+                result.textContent = "Player 2's Turn";
+            } else {
+                player2Selection = selection;
+                player2Choice.textContent = '?';
+                
+                // Show both choices
+                player1Choice.textContent = choices_emoji[player1Selection];
+                player2Choice.textContent = choices_emoji[player2Selection];
+                
+                // Determine winner
+                const winner = determineWinner(player1Selection, player2Selection);
+                updateScore(winner);
+                
+                // Update result message
+                result.textContent = winner === 'tie' ? 
+                    "It's a tie! 🤝" : 
+                    `${winner === 'player1' ? 'Player 1' : 'Player 2'} wins! 🎉`;
+                
+                // Add to history
+                addToHistory(player1Selection, player2Selection, winner);
+                
+                // Reset for next round
+                currentPlayer = 1;
+                player1Selection = null;
+                player2Selection = null;
+                setTimeout(() => {
+                    result.textContent = "Player 1's Turn";
+                }, 2000);
+            }
+        }
+
+        // Event Listeners
+        choices.forEach(choice => {
+            choice.addEventListener('click', () => {
+                playTurn(choice.dataset.choice);
+            });
+        });
+
+        resetButton.addEventListener('click', () => {
+            scores = { player1: 0, player2: 0 };
+            player1Score.textContent = '0';
+            player2Score.textContent = '0';
+            result.textContent = "Player 1's Turn";
+            player1Choice.textContent = '?';
+            player2Choice.textContent = '?';
+            historyList.innerHTML = '';
+            currentPlayer = 1;
+            player1Selection = null;
+            player2Selection = null;
+        });
+    </script>
+</body>
+</html>

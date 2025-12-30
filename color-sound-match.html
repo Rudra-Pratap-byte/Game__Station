@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color & Sound Match - Game Hub</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #e67e22;
+            --border: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .color-tile {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid var(--border);
+        }
+
+        .color-tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(230, 126, 34, 0.3);
+        }
+
+        .color-tile.active {
+            transform: scale(0.95);
+            box-shadow: 0 0 30px rgba(230, 126, 34, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: var(--text-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #d35400;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .score {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .level {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .level-transition {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .level-transition h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .level-transition p {
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+        }
+
+        .level-transition .btn {
+            margin: 0 10px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .color-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="window.location.href='index.html'">← Back to Game Hub</button>
+        <div class="header">
+            <h1>Color & Sound Match</h1>
+        </div>
+        <div class="game-container">
+            <div class="level">Level: <span id="level">1</span></div>
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="color-grid" id="colorGrid">
+                <!-- Color tiles will be generated by JavaScript -->
+            </div>
+            <div class="controls">
+                <button class="btn" id="startBtn">Start Game</button>
+                <button class="btn" id="resetBtn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="level-transition" id="levelTransition">
+        <h2>Level Complete!</h2>
+        <p>Are you ready for level <span id="nextLevel">2</span>?</p>
+        <div>
+            <button class="btn" id="continueBtn">Continue</button>
+            <button class="btn" id="pauseBtn">Take a Break</button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = {
+            level: 1,
+            score: 0,
+            sequence: [],
+            playerSequence: [],
+            isPlaying: false,
+            colors: [
+                { color: '#e74c3c', note: 'C4' },
+                { color: '#3498db', note: 'E4' },
+                { color: '#2ecc71', note: 'G4' },
+                { color: '#f1c40f', note: 'B4' },
+                { color: '#9b59b6', note: 'D5' },
+                { color: '#e67e22', note: 'F5' },
+                { color: '#1abc9c', note: 'A5' },
+                { color: '#34495e', note: 'C5' }
+            ],
+            audioContext: null
+        };
+
+        function initAudio() {
+            gameData.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playNote(frequency) {
+            const oscillator = gameData.audioContext.createOscillator();
+            const gainNode = gameData.audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(gameData.audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.3, gameData.audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, gameData.audioContext.currentTime + 0.5);
+            
+            oscillator.start();
+            oscillator.stop(gameData.audioContext.currentTime + 0.5);
+        }
+
+        function getNoteFrequency(note) {
+            const notes = {
+                'C4': 261.63, 'E4': 329.63, 'G4': 392.00, 'B4': 493.88,
+                'D5': 587.33, 'F5': 698.46, 'A5': 880.00, 'C5': 523.25
+            };
+            return notes[note];
+        }
+
+        function createColorTile(color, note, index) {
+            const tile = document.createElement('div');
+            tile.className = 'color-tile';
+            tile.style.backgroundColor = color;
+            tile.dataset.index = index;
+            
+            tile.addEventListener('click', () => handleTileClick(index));
+            
+            return tile;
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+            
+            gameData.colors.forEach((color, index) => {
+                const tile = createColorTile(color.color, color.note, index);
+                grid.appendChild(tile);
+            });
+        }
+
+        function generateSequence() {
+            const sequenceLength = Math.min(3 + gameData.level, 8);
+            gameData.sequence = [];
+            
+            for (let i = 0; i < sequenceLength; i++) {
+                gameData.sequence.push(Math.floor(Math.random() * gameData.colors.length));
+            }
+        }
+
+        async function playSequence() {
+            for (const index of gameData.sequence) {
+                const tile = document.querySelector(`.color-tile[data-index="${index}"]`);
+                tile.classList.add('active');
+                
+                const color = gameData.colors[index];
+                playNote(getNoteFrequency(color.note));
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                tile.classList.remove('active');
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+        }
+
+        function handleTileClick(index) {
+            if (!gameData.isPlaying) return;
+            
+            const tile = document.querySelector(`.color-tile[data-index="${index}"]`);
+            tile.classList.add('active');
+            
+            const color = gameData.colors[index];
+            playNote(getNoteFrequency(color.note));
+            
+            setTimeout(() => {
+                tile.classList.remove('active');
+            }, 200);
+            
+            gameData.playerSequence.push(index);
+            checkSequence();
+        }
+
+        function checkSequence() {
+            const currentIndex = gameData.playerSequence.length - 1;
+            
+            if (gameData.playerSequence[currentIndex] !== gameData.sequence[currentIndex]) {
+                gameOver();
+                return;
+            }
+            
+            if (gameData.playerSequence.length === gameData.sequence.length) {
+                gameData.score += gameData.level * 10;
+                document.getElementById('score').textContent = gameData.score;
+                
+                if (gameData.level < 8) {
+                    showLevelTransition();
+                } else {
+                    winGame();
+                }
+            }
+        }
+
+        function showLevelTransition() {
+            gameData.isPlaying = false;
+            const nextLevel = gameData.level + 1;
+            document.getElementById('nextLevel').textContent = nextLevel;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('levelTransition').style.display = 'block';
+        }
+
+        function hideLevelTransition() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('levelTransition').style.display = 'none';
+        }
+
+        function continueToNextLevel() {
+            gameData.level++;
+            document.getElementById('level').textContent = gameData.level;
+            hideLevelTransition();
+            startRound();
+        }
+
+        function pauseGame() {
+            hideLevelTransition();
+            // Game remains paused until player clicks Start Game again
+        }
+
+        function gameOver() {
+            gameData.isPlaying = false;
+            alert(`Game Over! Your score: ${gameData.score}`);
+            resetGame();
+        }
+
+        function winGame() {
+            gameData.isPlaying = false;
+            alert(`Congratulations! You completed all levels! Final score: ${gameData.score}`);
+            resetGame();
+        }
+
+        function resetGame() {
+            gameData.level = 1;
+            gameData.score = 0;
+            gameData.sequence = [];
+            gameData.playerSequence = [];
+            gameData.isPlaying = false;
+            
+            document.getElementById('level').textContent = gameData.level;
+            document.getElementById('score').textContent = gameData.score;
+            hideLevelTransition();
+        }
+
+        async function startRound() {
+            gameData.playerSequence = [];
+            generateSequence();
+            await playSequence();
+            gameData.isPlaying = true;
+        }
+
+        // Event Listeners
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (!gameData.audioContext) {
+                initAudio();
+            }
+            startRound();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetGame();
+        });
+
+        document.getElementById('continueBtn').addEventListener('click', () => {
+            continueToNextLevel();
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            pauseGame();
+        });
+
+        // Initialize the game
+        renderGrid();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Cars</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #333;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 1000px;
+            height: 700px;
+            background-color: #222;
+            border: 4px solid #444;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGtmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDUgNzkuMTYzNDk5LCAyMDE4LzA4LzEzLTE2OjQwOjIyICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxOSAoV2luZG93cykiIHhtcDpDcmVhdGVEYXRlPSIyMDIzLTA2LTAyVDEzOjQ5OjE1KzA1OjMwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAyMy0wNi0wMlQxMzo1MzoxOSswNTozMCIgeG1wOk1ldGFkYXRhRGF0ZT0iMjAyMy0wNi0wMlQxMzo1MzoxOSswNTozMCIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSJzUkdCIElFQzYxOTY2LTIuMSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDplN2MyNjZkYS03YTcxLTEyNGItOTRlYS05MTRkNWExODMwYjAiIHhtcE1NOkRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDphN2E1NWRjMy0xMWY5LTg2NDgtOTk0ZC1kNzg5YjMzMjNjZTAiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDplZjY3ZjlmNS0xYTczLTFiNGEtOTRlOS05MTRkOWFmODMwYmEiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOmVmNjdmOWY1LTFhNzMtMWI0YS05NGU5LTkxNGQ5YWY4MzBiYSIgc3RFdnQ6d2hlbj0iMjAyMy0wNi0wMlQxMzo0OToxNSswNTozMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKFdpbmRvd3MpIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDplN2MyNjZkYS03YTcxLTEyNGItOTRlYS05MTRkNWExODMwYjAiIHN0RXZ0OndoZW49IjIwMjMtMDYtMDJUMTM6NTM6MTkrMDU6MzAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE5IChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6lpCWZAAAGrElEQVR4nO2cW49URRSFv95uboIMaARUQFBQozGSaIKaeOGhf8of9Bd44Y8JGhITYzQRBQMCRkEYYIaZYbqrfDi1m32qqrv7nO7TF/ZK+qG7T9c5e9fZtWvXrn2OdF3HiNFsdwdGzIwRyMgYgYyMEcjIGIGMjBHIyBiBjIwRyMgYgYyMEcjIGIGMjBHIyBiBjIwRyMgYgYyMEcjIGIGMjBHIyBiBjIwRyMgYgYyMEcjIGIGMjBHIyBiBjIwRyMgYgYyMEcjI2L3d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');
+            background-color: #383838;
+            width: 1000px;
+            height: 700px;
+        }
+        
+        .car {
+            position: absolute;
+            width: 30px;
+            height: 50px;
+            border-radius: 50px;
+        }
+        
+        #car1 {
+            background-color: #3498db;
+            transform: rotate(0deg);
+        }
+        
+        #car2 {
+            background-color: #e74c3c;
+            transform: rotate(180deg);
+        }
+        
+        .bullet {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: yellow;
+            border-radius: 50%;
+        }
+        
+        .health-bar {
+            position: absolute;
+            height: 5px;
+            width: 30px;
+            background-color: limegreen;
+        }
+        
+        #health1 {
+            bottom: -10px;
+        }
+        
+        #health2 {
+            bottom: -10px;
+        }
+        
+        .powerup {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: gold;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        #scoreboard {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            color: white;
+            font-size: 18px;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 24px;
+            display: none;
+        }
+        
+        #restartBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #obstacles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .obstacle {
+            position: absolute;
+            background-color: #555;
+            border: 2px solid #666;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .joystick-container {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.3);
+            border: 2px solid #555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+        }
+        
+        .joystick-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.5);
+            position: absolute;
+        }
+        
+        #joystick1 {
+            bottom: 20px;
+            left: 20px;
+        }
+        
+        #joystick2 {
+            bottom: 20px;
+            right: 20px;
+        }
+        
+        .fire-button {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgb(187, 0, 0);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        
+        #fire1 {
+            bottom: 65px;
+            left: 200px;
+        }
+        
+        #fire2 {
+            bottom: 65px;
+            right: 200px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #555;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: #777;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Back to Game Hub</a>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1000" height="700"></canvas>
+        
+        <div id="scoreboard">
+            <div id="player1Score">Blue: 0</div>
+            <div id="player2Score">Red: 0</div>
+        </div>
+        
+        <div id="gameOver">
+            <div id="winner"></div>
+            <button id="restartBtn">Play Again</button>
+        </div>
+        
+        <div class="joystick-container" id="joystick1">
+            <div class="joystick-thumb" id="thumb1"></div>
+        </div>
+        
+        <div class="joystick-container" id="joystick2">
+            <div class="joystick-thumb" id="thumb2"></div>
+        </div>
+        
+        <button class="fire-button" id="fire1">FIRE</button>
+        <button class="fire-button" id="fire2">FIRE</button>
+        
+        <div class="controls">
+            <div>
+                <strong>Blue Controls:</strong> WASD or Left Joystick
+            </div>
+            <div>
+                <strong>Red Controls:</strong> Arrow keys or Right Joystick
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game Canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game variables
+        let gameRunning = true;
+        let player1Score = 0;
+        let player2Score = 0;
+        
+        // Car objects
+        const car1 = {
+            x: 100,
+            y: 100,
+            width: 30,
+            height: 50,
+            speed: 4,
+            angle: 0,
+            health: 100,
+            color: '#3498db',
+            bullets: [],
+            lastShot: 0,
+            shotCooldown: 300 // milliseconds
+        };
+        
+        const car2 = {
+            x: 700,
+            y: 500,
+            width: 30,
+            height: 50,
+            speed: 4,
+            angle: Math.PI,
+            health: 100,
+            color: '#e74c3c',
+            bullets: [],
+            lastShot: 0,
+            shotCooldown: 300 // milliseconds
+        };
+        
+        // Obstacles
+        const obstacles = [
+            { x: 200, y: 150, width: 400, height: 30 },
+            { x: 200, y: 420, width: 400, height: 30 },
+            { x: 385, y: 180, width: 30, height: 240 },
+            { x: 100, y: 250, width: 100, height: 100 },
+            { x: 600, y: 250, width: 100, height: 100 }
+        ];
+        
+        // Powerups
+        let powerups = [];
+        
+        // Keyboard state
+        const keys = {};
+        
+        // Initialize game
+        function init() {
+            // Reset car positions and properties
+            car1.x = 100;
+            car1.y = 100;
+            car1.angle = 0;
+            car1.health = 100;
+            car1.bullets = [];
+            
+            car2.x = 700;
+            car2.y = 500;
+            car2.angle = Math.PI;
+            car2.health = 100;
+            car2.bullets = [];
+            
+            // Reset scores
+            player1Score = 0;
+            player2Score = 0;
+            updateScoreboard();
+            
+            // Hide game over screen
+            document.getElementById('gameOver').style.display = 'none';
+            
+            // Start game loop
+            gameRunning = true;
+            requestAnimationFrame(gameLoop);
+            
+            // Start powerup generation
+            generatePowerup();
+        }
+        
+        // Game loop
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            drawBackground();
+            
+            // Update and draw obstacles
+            drawObstacles();
+            
+            // Update and draw powerups
+            updatePowerups();
+            
+            // Update car positions based on keyboard input
+            updateCars();
+            
+            // Update and draw bullets
+            updateBullets();
+            
+            // Draw cars
+            drawCar(car1);
+            drawCar(car2);
+            
+            // Check for collisions
+            checkCollisions();
+            
+            // Request next frame
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Draw background grid
+        function drawBackground() {
+            ctx.fillStyle = '#444';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            
+            // Vertical grid lines
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines
+            for (let y = 0; y < canvas.height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+        
+        // Draw obstacles
+        function drawObstacles() {
+            ctx.fillStyle = '#555';
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+        
+        // Update and draw powerups
+        function updatePowerups() {
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                const powerup = powerups[i];
+                
+                // Draw powerup
+                ctx.fillStyle = powerup.color;
+                ctx.beginPath();
+                ctx.arc(powerup.x, powerup.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Check for car collision with powerup
+                if (distance(car1.x, car1.y, powerup.x, powerup.y) < 25) {
+                    applyPowerup(car1, powerup.type);
+                    powerups.splice(i, 1);
+                } else if (distance(car2.x, car2.y, powerup.x, powerup.y) < 25) {
+                    applyPowerup(car2, powerup.type);
+                    powerups.splice(i, 1);
+                }
+            }
+        }
+        
+        // Generate a random powerup
+        function generatePowerup() {
+            if (!gameRunning) return;
+            
+            // Random position (avoiding obstacles)
+            let validPosition = false;
+            let x, y;
+            
+            while (!validPosition) {
+                x = Math.random() * (canvas.width - 40) + 20;
+                y = Math.random() * (canvas.height - 40) + 20;
+                
+                validPosition = true;
+                
+                // Check if position overlaps with obstacles
+                for (const obstacle of obstacles) {
+                    if (x > obstacle.x - 20 && x < obstacle.x + obstacle.width + 20 &&
+                        y > obstacle.y - 20 && y < obstacle.y + obstacle.height + 20) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+            }
+            
+            // Random powerup type
+            const types = ['health', 'speed', 'rapidFire'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            // Color based on type
+            let color;
+            switch (type) {
+                case 'health':
+                    color = 'green';
+                    break;
+                case 'speed':
+                    color = 'blue';
+                    break;
+                case 'rapidFire':
+                    color = 'orange';
+                    break;
+            }
+            
+            powerups.push({ x, y, type, color });
+            
+            // Schedule next powerup
+            setTimeout(generatePowerup, Math.random() * 5000 + 5000);
+        }
+        
+        // Apply powerup effect to car
+        function applyPowerup(car, type) {
+            switch (type) {
+                case 'health':
+                    car.health = Math.min(100, car.health + 25);
+                    break;
+                case 'speed':
+                    car.speed = 6;
+                    setTimeout(() => { car.speed = 4; }, 5000);
+                    break;
+                case 'rapidFire':
+                    const originalCooldown = car.shotCooldown;
+                    car.shotCooldown = 100;
+                    setTimeout(() => { car.shotCooldown = originalCooldown; }, 5000);
+                    break;
+            }
+        }
+        
+        // Update car positions based on keyboard input
+        function updateCars() {
+            // Player 1 controls (WASD or Joystick)
+            if (keys['w'] || joystick1State.dy < -0.3) {
+                car1.x += Math.cos(car1.angle) * car1.speed;
+                car1.y += Math.sin(car1.angle) * car1.speed;
+            }
+            if (keys['s'] || joystick1State.dy > 0.3) {
+                car1.x -= Math.cos(car1.angle) * car1.speed * 0.5;
+                car1.y -= Math.sin(car1.angle) * car1.speed * 0.5;
+            }
+            if (keys['a'] || joystick1State.dx < -0.3) {
+                car1.angle -= 0.05;
+            }
+            if (keys['d'] || joystick1State.dx > 0.3) {
+                car1.angle += 0.05;
+            }
+            if (keys[' '] && Date.now() - car1.lastShot > car1.shotCooldown) {
+                shoot(car1);
+                car1.lastShot = Date.now();
+            }
+            
+            // Player 2 controls (Arrow keys or Joystick)
+            if (keys['ArrowUp'] || joystick2State.dy < -0.3) {
+                car2.x += Math.cos(car2.angle) * car2.speed;
+                car2.y += Math.sin(car2.angle) * car2.speed;
+            }
+            if (keys['ArrowDown'] || joystick2State.dy > 0.3) {
+                car2.x -= Math.cos(car2.angle) * car2.speed * 0.5;
+                car2.y -= Math.sin(car2.angle) * car2.speed * 0.5;
+            }
+            if (keys['ArrowLeft'] || joystick2State.dx < -0.3) {
+                car2.angle -= 0.05;
+            }
+            if (keys['ArrowRight'] || joystick2State.dx > 0.3) {
+                car2.angle += 0.05;
+            }
+            if (keys['Enter'] && Date.now() - car2.lastShot > car2.shotCooldown) {
+                shoot(car2);
+                car2.lastShot = Date.now();
+            }
+            
+            // Keep cars within canvas boundaries
+            car1.x = Math.max(20, Math.min(canvas.width - 20, car1.x));
+            car1.y = Math.max(25, Math.min(canvas.height - 25, car1.y));
+            
+            car2.x = Math.max(20, Math.min(canvas.width - 20, car2.x));
+            car2.y = Math.max(25, Math.min(canvas.height - 25, car2.y));
+            
+            // Check for collision with obstacles
+            obstacles.forEach(obstacle => {
+                carObstacleCollision(car1, obstacle);
+                carObstacleCollision(car2, obstacle);
+            });
+        }
+        
+        // Create a bullet
+        function shoot(car) {
+            const bulletSpeed = 10;
+            const offsetDistance = 25;
+            
+            const bulletX = car.x + Math.cos(car.angle) * offsetDistance;
+            const bulletY = car.y + Math.sin(car.angle) * offsetDistance;
+            
+            const bullet = {
+                x: bulletX,
+                y: bulletY,
+                width: 5,
+                height: 5,
+                speed: bulletSpeed,
+                angle: car.angle
+            };
+            
+            car.bullets.push(bullet);
+        }
+        
+        // Update and draw bullets
+        function updateBullets() {
+            for (let i = car1.bullets.length - 1; i >= 0; i--) {
+                const bullet = car1.bullets[i];
+                
+                bullet.x += Math.cos(bullet.angle) * bullet.speed;
+                bullet.y += Math.sin(bullet.angle) * bullet.speed;
+                
+                ctx.fillStyle = 'yellow';
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Check for collision with obstacles
+                obstacles.forEach(obstacle => {
+                    if (bullet.x > obstacle.x && bullet.x < obstacle.x + obstacle.width &&
+                        bullet.y > obstacle.y && bullet.y < obstacle.y + obstacle.height) {
+                        car1.bullets.splice(i, 1);
+                    }
+                });
+                
+                // Check for out of bounds
+                if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+                    car1.bullets.splice(i, 1);
+                }
+                
+                // Check for collision with car2
+                if (distance(bullet.x, bullet.y, car2.x, car2.y) < 15) {
+                    car2.health -= 10;
+                    car1.bullets.splice(i, 1);
+                    
+                    if (car2.health <= 0) {
+                        player1Score++;
+                        updateScoreboard();
+                        resetRound();
+                    }
+                }
+            }
+            
+            for (let i = car2.bullets.length - 1; i >= 0; i--) {
+                const bullet = car2.bullets[i];
+                
+                bullet.x += Math.cos(bullet.angle) * bullet.speed;
+                bullet.y += Math.sin(bullet.angle) * bullet.speed;
+                
+                ctx.fillStyle = 'yellow';
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Check for collision with obstacles
+                obstacles.forEach(obstacle => {
+                    if (bullet.x > obstacle.x && bullet.x < obstacle.x + obstacle.width &&
+                        bullet.y > obstacle.y && bullet.y < obstacle.y + obstacle.height) {
+                        car2.bullets.splice(i, 1);
+                    }
+                });
+                
+                // Check for out of bounds
+                if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+                    car2.bullets.splice(i, 1);
+                }
+                
+                // Check for collision with car1
+                if (distance(bullet.x, bullet.y, car1.x, car1.y) < 15) {
+                    car1.health -= 10;
+                    car2.bullets.splice(i, 1);
+                    
+                    if (car1.health <= 0) {
+                        player2Score++;
+                        updateScoreboard();
+                        resetRound();
+                    }
+                }
+            }
+        }
+        
+        // Check for collisions between cars and obstacles
+        function carObstacleCollision(car, obstacle) {
+            // Simple rectangle collision
+            if (car.x + 15 > obstacle.x && car.x - 15 < obstacle.x + obstacle.width &&
+                car.y + 15 > obstacle.y && car.y - 15 < obstacle.y + obstacle.height) {
+                // Push car away from obstacle
+                const centerX = obstacle.x + obstacle.width / 2;
+                const centerY = obstacle.y + obstacle.height / 2;
+                
+                const dx = car.x - centerX;
+                const dy = car.y - centerY;
+                
+                // Normalize vector
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const normalizedX = dx / length;
+                const normalizedY = dy / length;
+                
+                // Push car away
+                car.x = Math.max(15, Math.min(canvas.width - 15, car.x + normalizedX * 5));
+                car.y = Math.max(25, Math.min(canvas.height - 25, car.y + normalizedY * 5));
+            }
+        }
+        
+        // Check for collisions between cars
+        function checkCollisions() {
+            // Check for collision between cars
+            if (distance(car1.x, car1.y, car2.x, car2.y) < 30) {
+                // Calculate collision response
+                const dx = car2.x - car1.x;
+                const dy = car2.y - car1.y;
+                
+                // Normalize vector
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const normalizedX = dx / length;
+                const normalizedY = dy / length;
+                
+                // Push cars away from each other
+                car1.x -= normalizedX * 2;
+                car1.y -= normalizedY * 2;
+                car2.x += normalizedX * 2;
+                car2.y += normalizedY * 2;
+                
+                // Keep cars within boundaries
+                car1.x = Math.max(15, Math.min(canvas.width - 15, car1.x));
+                car1.y = Math.max(25, Math.min(canvas.height - 25, car1.y));
+                car2.x = Math.max(15, Math.min(canvas.width - 15, car2.x));
+                car2.y = Math.max(25, Math.min(canvas.height - 25, car2.y));
+            }
+        }
+        
+        // Draw a car with health bar
+        function drawCar(car) {
+            // Draw car body (square shape with rounded corners)
+            ctx.save();
+            ctx.translate(car.x, car.y);
+            ctx.rotate(car.angle);
+            
+            // Car body (rounded square)
+            ctx.fillStyle = car.color;
+            const cornerRadius = 8;
+            const width = 40;
+            const height = 40;
+            
+            // Draw rounded rectangle
+            ctx.beginPath();
+            ctx.moveTo(-width/2 + cornerRadius, -height/2);
+            ctx.lineTo(width/2 - cornerRadius, -height/2);
+            ctx.arcTo(width/2, -height/2, width/2, -height/2 + cornerRadius, cornerRadius);
+            ctx.lineTo(width/2, height/2 - cornerRadius);
+            ctx.arcTo(width/2, height/2, width/2 - cornerRadius, height/2, cornerRadius);
+            ctx.lineTo(-width/2 + cornerRadius, height/2);
+            ctx.arcTo(-width/2, height/2, -width/2, height/2 - cornerRadius, cornerRadius);
+            ctx.lineTo(-width/2, -height/2 + cornerRadius);
+            ctx.arcTo(-width/2, -height/2, -width/2 + cornerRadius, -height/2, cornerRadius);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Car cannon/gun - properly aligned at the front of the car
+            ctx.fillStyle = '#222';
+            ctx.fillRect(-5, -height/2 - 10, 10, 15);
+            
+            ctx.restore();
+            
+            // Health bar background
+            ctx.fillStyle = '#333';
+            ctx.fillRect(car.x - 20, car.y + 30, 40, 5);
+            
+            // Health bar
+            ctx.fillStyle = car.health > 50 ? 'limegreen' : car.health > 25 ? 'yellow' : 'red';
+            ctx.fillRect(car.x - 20, car.y + 30, (car.health / 100) * 40, 5);
+        }
+        
+        // Reset round after a car is destroyed
+        function resetRound() {
+            // Reset car positions and properties
+            car1.x = 100;
+            car1.y = 100;
+            car1.angle = 0;
+            car1.health = 100;
+            car1.bullets = [];
+            
+            car2.x = 700;
+            car2.y = 500;
+            car2.angle = Math.PI;
+            car2.health = 100;
+            car2.bullets = [];
+            
+            // Check for game over
+            if (player1Score >= 5 || player2Score >= 5) {
+                gameOver();
+            }
+        }
+        
+        // Event listeners
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            // Prevent scrolling with arrow keys and space
+            if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 'a', 's', 'd'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+        
+        window.addEventListener('keyup', e => {
+            keys[e.key] = false;
+        });
+        
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            init();
+        });
+        
+        // Joystick Control Setup
+        const joystick1 = document.getElementById('joystick1');
+        const thumb1 = document.getElementById('thumb1');
+        const joystick2 = document.getElementById('joystick2');
+        const thumb2 = document.getElementById('thumb2');
+        const fire1 = document.getElementById('fire1');
+        const fire2 = document.getElementById('fire2');
+        
+        // Joystick state
+        const joystick1State = { active: false, dx: 0, dy: 0 };
+        const joystick2State = { active: false, dx: 0, dy: 0 };
+        
+        // Setup joystick 1 (blue car)
+        setupJoystick(joystick1, thumb1, joystick1State);
+        
+        // Setup joystick 2 (red car)
+        setupJoystick(joystick2, thumb2, joystick2State);
+        
+        // Fire buttons
+        fire1.addEventListener('pointerdown', () => {
+            if (Date.now() - car1.lastShot > car1.shotCooldown) {
+                shoot(car1);
+                car1.lastShot = Date.now();
+            }
+        });
+        
+        fire2.addEventListener('pointerdown', () => {
+            if (Date.now() - car2.lastShot > car2.shotCooldown) {
+                shoot(car2);
+                car2.lastShot = Date.now();
+            }
+        });
+        
+        function setupJoystick(joystickElem, thumbElem, state) {
+            joystickElem.addEventListener('pointerdown', (e) => {
+                state.active = true;
+                updateJoystickPosition(e, joystickElem, thumbElem, state);
+            });
+            
+            window.addEventListener('pointermove', (e) => {
+                if (state.active) {
+                    updateJoystickPosition(e, joystickElem, thumbElem, state);
+                }
+            });
+            
+            window.addEventListener('pointerup', () => {
+                if (state.active) {
+                    state.active = false;
+                    state.dx = 0;
+                    state.dy = 0;
+                    thumbElem.style.transform = `translate(0px, 0px)`;
+                }
+            });
+        }
+        
+        function updateJoystickPosition(e, joystickElem, thumbElem, state) {
+            const rect = joystickElem.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            let dx = e.clientX - rect.left - centerX;
+            let dy = e.clientY - rect.top - centerY;
+            
+            // Limit to joystick radius
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = rect.width / 2 - thumbElem.offsetWidth / 2;
+            
+            if (distance > maxDistance) {
+                const angle = Math.atan2(dy, dx);
+                dx = Math.cos(angle) * maxDistance;
+                dy = Math.sin(angle) * maxDistance;
+            }
+            
+            // Update thumb position
+            thumbElem.style.transform = `translate(${dx}px, ${dy}px)`;
+            
+            // Normalize for game input (-1 to 1)
+            state.dx = dx / maxDistance;
+            state.dy = dy / maxDistance;
+        }
+        
+        // Start the game
+        init();
+        
+        function updateScoreboard() {
+            document.getElementById('player1Score').textContent = `Blue: ${player1Score}`;
+            document.getElementById('player2Score').textContent = `Red: ${player2Score}`;
+        }
+        
+        // Calculate distance between two points
+        function distance(x1, y1, x2, y2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            
+            const winner = player1Score > player2Score ? "Blue Player Wins!" : "Red Player Wins!";
+            document.getElementById('winner').textContent = winner;
+            document.getElementById('gameOver').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

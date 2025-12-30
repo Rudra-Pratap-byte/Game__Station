@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>JS Platformer Engine</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        canvas {
+            background-color: #5c94fc;
+            /* Mario Sky Blue */
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-button">← Back to Game Hub</a>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">Controls: Arrow Keys to Move | Space to Jump</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- GAME CONSTANTS ---
+        const GRAVITY = 0.5;
+        const FRICTION = 0.8;
+        const SPEED = 5;
+        const JUMP_FORCE = 12;
+
+        // --- GAME STATE ---
+        let keys = {
+            right: false,
+            left: false,
+            up: false
+        };
+
+        let gameRunning = true;
+        let cameraOffsetX = 0;
+
+        // --- ENTITIES ---
+
+        // The Player (Mario)
+        const player = {
+            x: 100,
+            y: 100,
+            width: 30,
+            height: 40,
+            velX: 0,
+            velY: 0,
+            grounded: false,
+            color: '#ff0000', // Mario Red
+
+            draw: function () {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x - cameraOffsetX, this.y, this.width, this.height);
+                // Draw eyes to show direction
+                ctx.fillStyle = "white";
+                let eyeOffset = this.velX >= 0 ? 20 : 5;
+                ctx.fillRect(this.x - cameraOffsetX + eyeOffset, this.y + 5, 5, 10);
+            }
+        };
+
+        // Level Design
+        // 0 = Empty, 1 = Ground/Brick, 2 = Goomba, 3 = Win Flag, 4 = Mystery Box
+        const tileSize = 40;
+        const levelMap = [
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "      4                                                             ",
+            "                                       444                          ",
+            "               111                   111111                         ",
+            "                                                              3     ",
+            "         2             2      11    2           2       11        ",
+            "111111111111111111   11111111111111111111111111111111111111111111111",
+            "111111111111111111   11111111111111111111111111111111111111111111111"
+        ];
+
+        let platforms = [];
+        let enemies = [];
+        let endFlag = null;
+
+        function initLevel() {
+            platforms = [];
+            enemies = [];
+            player.x = 100;
+            player.y = 100;
+            player.velX = 0;
+            player.velY = 0;
+            cameraOffsetX = 0;
+            gameRunning = true;
+
+            for (let row = 0; row < levelMap.length; row++) {
+                for (let col = 0; col < levelMap[row].length; col++) {
+                    let char = levelMap[row][col];
+                    let x = col * tileSize;
+                    let y = row * tileSize;
+
+                    if (char === '1') {
+                        platforms.push({ x: x, y: y, width: tileSize, height: tileSize, type: 'brick' });
+                    } else if (char === '4') {
+                        platforms.push({ x: x, y: y, width: tileSize, height: tileSize, type: 'box' });
+                    } else if (char === '2') {
+                        enemies.push({
+                            x: x, y: y, width: tileSize, height: tileSize,
+                            velX: -2, alive: true, type: 'goomba'
+                        });
+                    } else if (char === '3') {
+                        endFlag = { x: x, y: y - tileSize, width: 10, height: tileSize * 2 };
+                    }
+                }
+            }
+        }
+
+        // --- PHYSICS ENGINE ---
+
+        function checkCollision(rect1, rect2) {
+            return (rect1.x < rect2.x + rect2.width &&
+                rect1.x + rect1.width > rect2.x &&
+                rect1.y < rect2.y + rect2.height &&
+                rect1.y + rect1.height > rect2.y);
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            // Input Handling
+            if (keys.right) {
+                if (player.velX < SPEED) player.velX++;
+            }
+            if (keys.left) {
+                if (player.velX > -SPEED) player.velX--;
+            }
+
+            // Friction & Gravity
+            player.velX *= FRICTION;
+            player.velY += GRAVITY;
+
+            // Apply Horizontal Movement
+            player.x += player.velX;
+
+            // Platform Collision (X-axis)
+            player.grounded = false;
+            for (let plat of platforms) {
+                if (checkCollision(player, plat)) {
+                    if (player.velX > 0) player.x = plat.x - player.width;
+                    else if (player.velX < 0) player.x = plat.x + plat.width;
+                    player.velX = 0;
+                }
+            }
+
+            // Apply Vertical Movement
+            player.y += player.velY;
+
+            // Platform Collision (Y-axis)
+            for (let plat of platforms) {
+                if (checkCollision(player, plat)) {
+                    if (player.velY > 0) { // Falling
+                        player.y = plat.y - player.height;
+                        player.grounded = true;
+                        player.velY = 0;
+                    } else if (player.velY < 0) { // Jumping into block
+                        player.y = plat.y + plat.height;
+                        player.velY = 0;
+                    }
+                }
+            }
+
+            // Jump
+            if (keys.up && player.grounded) {
+                player.velY = -JUMP_FORCE;
+                player.grounded = false;
+            }
+
+            // Death pit
+            if (player.y > canvas.height) {
+                resetGame();
+            }
+
+            // Camera Logic (Scrolls when player moves past center)
+            if (player.x > canvas.width / 2) {
+                // Simple camera follow with a minimum clamp
+                let targetCam = player.x - canvas.width / 2;
+                if (targetCam > cameraOffsetX) cameraOffsetX = targetCam;
+            }
+
+            // Enemy Logic
+            enemies.forEach(enemy => {
+                if (!enemy.alive) return;
+
+                // Simple patrol logic
+                enemy.x += enemy.velX;
+                // Reverse if hitting edges (simplified: just reverse occasionally or based on timer could go here)
+                // For now, let's just make them bounce off platforms if we wanted, 
+                // but for this simple demo, we will just make them walk left.
+
+                // Check collision with player
+                if (checkCollision(player, enemy)) {
+                    // Mario Logic: if falling, we stomp. If walking, we die.
+                    // We check if player bottom is somewhat above enemy center
+                    if (player.velY > 0 && player.y + player.height < enemy.y + enemy.height / 2) {
+                        enemy.alive = false;
+                        player.velY = -5; // Bounce off enemy
+                    } else {
+                        resetGame();
+                    }
+                }
+            });
+
+            // Win Condition
+            if (endFlag && checkCollision(player, endFlag)) {
+                alert("COURSE CLEAR! Press OK to play again.");
+                initLevel();
+            }
+        }
+
+        function resetGame() {
+            initLevel();
+        }
+
+        function draw() {
+            // Clear Screen
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Platforms
+            ctx.fillStyle = "#8B4513"; // Ground Brown
+            for (let plat of platforms) {
+                let drawX = plat.x - cameraOffsetX;
+                if (drawX + plat.width > 0 && drawX < canvas.width) {
+                    // Ground styling
+                    if (plat.type === 'brick') ctx.fillStyle = "#c53211";
+                    if (plat.type === 'box') ctx.fillStyle = "#fbce00";
+                    ctx.fillRect(drawX, plat.y, plat.width, plat.height);
+
+                    // Add a border for detail
+                    ctx.strokeStyle = "black";
+                    ctx.strokeRect(drawX, plat.y, plat.width, plat.height);
+                }
+            }
+
+            // Draw Flag
+            if (endFlag) {
+                ctx.fillStyle = "#00FF00";
+                ctx.fillRect(endFlag.x - cameraOffsetX, endFlag.y, endFlag.width, endFlag.height);
+                // Flag pole
+                ctx.fillStyle = "black";
+                ctx.fillRect(endFlag.x - cameraOffsetX - 5, endFlag.y, 5, endFlag.height);
+            }
+
+            // Draw Enemies
+            for (let enemy of enemies) {
+                if (enemy.alive) {
+                    let drawX = enemy.x - cameraOffsetX;
+                    ctx.fillStyle = "#633203"; // Goomba Brown
+                    ctx.fillRect(drawX, enemy.y, enemy.width, enemy.height);
+                    // Eyes
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(drawX + 5, enemy.y + 10, 10, 10);
+                    ctx.fillRect(drawX + 25, enemy.y + 10, 10, 10);
+                }
+            }
+
+            // Draw Player
+            player.draw();
+
+            requestAnimationFrame(() => {
+                update();
+                draw();
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        document.addEventListener("keydown", function (e) {
+            if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = true;
+            if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = true;
+            if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") keys.up = true;
+        });
+
+        document.addEventListener("keyup", function (e) {
+            if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = false;
+            if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = false;
+            if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") keys.up = false;
+        });
+
+        // Start Game
+        initLevel();
+        draw();
+
+    </script>
+</body>
+
+</html>

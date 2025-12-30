@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Agency FB;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            justify-content: center;
+            min-height: 100vh;
+            background: #008fcc;
+        }
+
+        .container {
+            width: 850px;
+            background: #fff;
+            display: flex;
+            gap: 70px;
+            align-items: flex-end;
+            padding: 40px 40px;
+            border-radius: 10px;
+        }
+
+        .hangman-box img {
+            max-width: 270px;
+        }
+
+        .hangman-box h1 {
+            font-size: 1.4rem;
+            margin-top: 20px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .word-display {
+            display: flex;
+            gap: 10px;
+            list-style: none;
+            justify-content: center;
+        }
+
+        .word-display .letter {
+            width: 28px;
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+
+            margin-bottom: 40px;
+            border-bottom: 3px solid #000;
+        }
+
+        .word-display .letter.guessed {
+            border-color: transparent;
+            margin: -40px 0 35px;
+        }
+
+        .game-box h4 {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .game-box h4 b {
+            font-weight: 600;
+        }
+
+        .game-box .guessed-text b {
+            color: #ff0000
+        }
+
+        .game-box .keyboard {
+            display: flex;
+            margin-top: 40px;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        :where(.game-modal, .keyboard) button {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            border: none;
+            background: #008fcc;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .keyboard button {
+            padding: 7px;
+            width: calc(100% /9 - 5px);
+        }
+
+        :where(.game-modal, .keyboard) button:hover {
+            background: #0070a0;
+        }
+
+        .game-modal {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .game-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .game-modal .content {
+            background: #fff;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transform: scale(0.7);
+            transition: transform 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-modal.show .content {
+            transform: scale(1);
+        }
+
+        .game-modal img {
+            max-width: 130px;
+            margin-bottom: 20px;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .game-modal h4 {
+            font-size: 1.53rem;
+            margin-bottom: 10px;
+            color: #008fcc;
+        }
+
+        .game-modal p {
+            font-size: 1.15rem;
+            margin: 15px 0 30px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .game-modal p b {
+            color: #5e63ba;
+            font-weight: 600;
+        }
+
+        .game-modal .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .game-modal .retry {
+            background: #ff4444;
+            padding: 10px;
+            display: inline-block;
+        }
+
+        .game-modal .next {
+            background: #4CAF50;
+            padding: 10px;
+            display: inline-block;
+        }
+
+        .game-modal .retry:hover {
+            background: #ce1d1d;
+        }
+
+        .game-modal .next:hover {
+            background: #35b33c;
+        }
+
+        @media (max-width: 782px) {
+            .container {
+                width: 100%;
+                padding: 20px;
+                flex-direction: column;
+            }
+            .hangman-box img {
+                max-width: 200px;
+            }
+            .hangman-box h1 {
+                display: none;
+            }
+            .back-button { position: static; margin-bottom: 12px; }
+            .restart-button { position: absolute; top: 12px; right: 12px; }
+        }
+
+        #game-container {
+            position: relative;
+            width: 890px;
+            left: 10px;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1d1b1b;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.808);
+        }
+
+        .back-button {
+            position: absolute;
+            top: 400px;
+            right: 390px;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #008fcc, #2d5dc5);
+            color: white;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            z-index: 10;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #2d5dc5, #008fcc);
+        }
+
+        .restart-button {
+            position: absolute;
+            top: 20px;
+            right: 120px; /* Adjusted to place beside back button */
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            z-index: 10;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .restart-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #7B1FA2, #9C27B0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-modal">
+        <div class="content">
+            <img src="lost.gif" alt="gif">
+            <h4>Game Over</h4>
+            <p>The correct word was: <b>rainbow</b></p>
+            <div class="button-container">
+                <button class="play-again retry">Retry</button>
+                <button class="play-again next" style="display: none;">Next Word</button>
+            </div>
+        </div>
+    </div>
+    <div id="game-container">
+        <button class="back-button" onclick="window.location.href='index.html'">← BACK</button>
+        <div class="container">
+            <div class="hangman-box">
+                <img src="hangman-0.svg" alt="hangman-img">
+                <h1>Hangman Game</h1>
+            </div>
+            <div class="game-box">
+                <ul class="word-display">
+                    <li class="letter"></li>
+                    <li class="letter"></li>
+                    <li class="letter guessed">a</li>
+                    <li class="letter"></li>
+                    <li class="letter"></li>
+                    <li class="letter"></li>
+                    <li class="letter"></li>
+                </ul>
+                <h4 class="hint-text">
+                    Hint:
+                    <b>Lorem ipsum dolor sit amet consectetur adipisicing elit.</b>
+                </h4>
+                <h4 class="guessed-text">
+                    Incorrect guesses:
+                    <b>0 / 6</b>
+                </h4>
+                <div class="keyboard"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const wordList = [
+            {
+                word: "guitar",
+                hint: "A musical instrument with strings."
+            },
+            {
+                word: "oxygen",
+                hint: "A colorless, odorless gas essential for life."
+            },
+            {
+                word: "mountain",
+                hint: "A large natural elevation of the Earth's surface."
+            },
+            {
+                word: "painting",
+                hint: "An art form using colors on a surface to create images or expression."
+            },
+            {
+                word: "astronomy",
+                hint: "The scientific study of celestial objects and phenomena."
+            },
+            {
+                word: "football",
+                hint: "A popular sport played with a spherical ball."
+            },
+            {
+                word: "chocolate",
+                hint: "A sweet treat made from cocoa beans."
+            },
+            {
+                word: "butterfly",
+                hint: "An insect with colorful wings and a slender body."
+            },
+            {
+                word: "history",
+                hint: "The study of past events and human civilization."
+            },
+            {
+                word: "pizza",
+                hint: "A savory dish consisting of a round, flattened base with toppings."
+            }
+        ];
+
+        const gameModal = document.querySelector(".game-modal");
+        const wordDisplay = document.querySelector(".word-display");
+        const hintText = document.querySelector(".hint-text b");
+        const guessedText = document.querySelector(".guessed-text b");
+        const keyboardDiv = document.querySelector(".keyboard");
+        const retryBtn = document.querySelector(".retry");
+        const nextBtn = document.querySelector(".next");
+        const hangmanImage = document.querySelector(".hangman-box img");
+
+        let currentWord, correctLetters, wrongGuessCount;
+        const maxGuesses = 6;
+
+        const resetGame = () => {
+            correctLetters = [];
+            wrongGuessCount = 0;
+            hangmanImage.src = `hangman-${wrongGuessCount}.svg`;
+            guessedText.innerText = `${wrongGuessCount} / ${maxGuesses}`;
+            keyboardDiv.querySelectorAll("button").forEach(btn => btn.disabled = false);
+            wordDisplay.innerHTML = currentWord.split("").map(() => `<li class="letter"></li>`).join("");
+            gameModal.classList.remove("show");
+            retryBtn.style.display = "none";
+            nextBtn.style.display = "none";
+        }
+
+        const getRandomWord = () => {
+            const { word, hint } = wordList[Math.floor(Math.random() * wordList.length)];
+            currentWord = word;
+            hintText.innerText = hint;
+            resetGame();
+        }
+
+        const gameOver = (isVictory) => {
+            setTimeout(() => {
+                const modalText = isVictory ? `You found the word:` : `The correct word was:`;
+                gameModal.querySelector("img").src = `${isVictory ? 'victory' : 'lost'}.gif`;
+                gameModal.querySelector("h4").innerText = `${isVictory ? 'Congrats!' : 'Game Over!'}`;
+                gameModal.querySelector("p").innerHTML = `${modalText} <b>${currentWord}</b>`;
+                if (isVictory) {
+                    nextBtn.style.display = "block";
+                    retryBtn.style.display = "none";
+                } else {
+                    retryBtn.style.display = "block";
+                    nextBtn.style.display = "none";
+                }
+                gameModal.classList.add("show");
+            }, 300);
+        }
+
+        const initGame = (button, clickedLetter) => {
+            if(currentWord.includes(clickedLetter)) {
+                [...currentWord].forEach((letter, index) => {
+                    if(letter === clickedLetter) {
+                        correctLetters.push(letter);
+                        wordDisplay.querySelectorAll("li")[index].innerText = letter;
+                        wordDisplay.querySelectorAll("li")[index].classList.add("guessed");
+                    }
+                });
+            } else {
+                wrongGuessCount++;
+                hangmanImage.src = `hangman-${wrongGuessCount}.svg`;
+            }
+            button.disabled = true;
+            guessedText.innerText = `${wrongGuessCount} / ${maxGuesses}`;
+
+            if(wrongGuessCount === maxGuesses) return gameOver(false);
+            if(correctLetters.length === currentWord.length) return gameOver(true);
+        }
+
+        for (let i = 97; i <= 122; i++) {
+            const button = document.createElement("button");
+            button.innerText = String.fromCharCode(i);
+            keyboardDiv.appendChild(button);
+            button.addEventListener("click", (e) => initGame(e.target, String.fromCharCode(i)));
+        }
+
+        getRandomWord();
+        retryBtn.addEventListener("click", getRandomWord);
+        nextBtn.addEventListener("click", getRandomWord);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub | Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* ========= MODERN CSS RESET & VARS ========= */
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg: #050508;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent: #ff004c;
+            --accent-glow: rgba(255, 0, 76, 0.3);
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --glass: blur(12px);
+        }
+
+        [data-theme="light"] {
+            --bg: #f0f2f5;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(0, 0, 0, 0.05);
+            --accent: #0062ff;
+            --accent-glow: rgba(0, 98, 255, 0.2);
+            --text: #1a1a1a;
+            --text-dim: #606060;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ========= ANIMATED BACKGROUND ========= */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 50%);
+            z-index: -1;
+            opacity: 0.5;
+            animation: pulse 8s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1) translate(-10%, -10%); }
+            100% { transform: scale(1.2) translate(10%, 10%); }
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo-area h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(to right, var(--text), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        /* ========= SEARCH BAR ========= */
+        .search-container {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px 15px 15px 50px;
+            border-radius: 50px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            backdrop-filter: var(--glass);
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-bar:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* ========= THEME TOGGLE ========= */
+        .theme-toggle {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass);
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* ========= GAME GRID ========= */
+        .game-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .game-item {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+            text-decoration: none;
+            color: inherit;
+            backdrop-filter: var(--glass);
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            transform-style: preserve-3d;
+        }
+
+        .game-item:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .game-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text);
+            position: relative;
+            z-index: 2;
+        }
+
+        .game-description {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .how-to-play {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.4;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* GLOW ORBS */
+        .triangle {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            filter: blur(50px);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 1;
+        }
+
+        .game-item:hover .triangle { opacity: 0.4; }
+
+        #noResults {
+            display: none;
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 50px;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 768px) {
+            .logo-area h1 { font-size: 2.5rem; }
+            .game-list { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+
+    <div class="container">
+        <header class="logo-area">
+            <h1>🎮 Game Hub</h1>
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="gameSearch" class="search-bar" placeholder="Find a game...">
+            </div>
+        </header>
+        
+
+        <div class="game-list" id="gameGrid">
+            <a href="TicTacToe.html" class="game-item">
+                <div class="game-title">Tic Tac Toe</div>
+                <div class="game-description">Classic X and O</div>
+                <div class="how-to-play">Match 3 in a row. Block your opponent.</div>
+                <div class="triangle" style="top:-20px; right:-20px;"></div>
+            </a>
+
+            <a href="hangman.html" class="game-item">
+                <div class="game-title">Hangman</div>
+                <div class="game-description">Word Puzzle</div>
+                <div class="how-to-play">Guess letters. Find the word before the man hangs.</div>
+                <div class="triangle" style="bottom:-20px; left:-20px;"></div>
+            </a>
+
+            <a href="snake.html" class="game-item">
+                <div class="game-title">Snake</div>
+                <div class="game-description">Arcade Classic</div>
+                <div class="how-to-play">Eat food to grow. Avoid walls and your own tail.</div>
+                <div class="triangle" style="top:50%; right:-30px;"></div>
+            </a>
+
+            <a href="2048.html" class="game-item">
+                <div class="game-title">2048</div>
+                <div class="game-description">Math Strategy</div>
+                <div class="how-to-play">Slide tiles. Combine same numbers to reach 2048.</div>
+                <div class="triangle" style="top:-20px; left:20%;"></div>
+            </a>
+
+            <a href="minesweeper.html" class="game-item">
+                <div class="game-title">Minesweeper</div>
+                <div class="game-description">Logic & Memory</div>
+                <div class="how-to-play">Click to reveal squares. Use numbers to find mines.</div>
+                <div class="triangle" style="bottom:10px; right:10px;"></div>
+            </a>
+
+            <a href="sudoku.html" class="game-item">
+                <div class="game-title">Sudoku</div>
+                <div class="game-description">Number Puzzle</div>
+                <div class="how-to-play">Fill 1-9 without repeating in rows or columns.</div>
+                <div class="triangle" style="top:10px; left:10px;"></div>
+            </a>
+
+            <a href="whack-a-mole.html" class="game-item">
+                <div class="game-title">Whack-a-Mole</div>
+                <div class="game-description">Reaction Time</div>
+                <div class="how-to-play">Click moles as they pop up. Speed is key!</div>
+                <div class="triangle" style="bottom:-20px; right:40%;"></div>
+            </a>
+
+            <a href="fruit-ninja.html" class="game-item">
+                <div class="game-title">Fruit Ninja</div>
+                <div class="game-description">Action Arcade</div>
+                <div class="how-to-play">Swipe to slice. Avoid bombs. Slice combos for bonus.</div>
+                <div class="triangle" style="top:20%; right:-20px;"></div>
+            </a>
+
+            <a href="brick-breaker.html" class="game-item">
+                <div class="game-title">Brick Breaker</div>
+                <div class="game-description">Retro Action</div>
+                <div class="how-to-play">Control paddle. Bounce ball. Break all bricks.</div>
+                <div class="triangle" style="bottom:-20px; left:-20px;"></div>
+            </a>
+
+            <a href="space-shooter.html" class="game-item">
+                <div class="game-title">Space Shooter</div>
+                <div class="game-description">Space Combat</div>
+                <div class="how-to-play">Move ship. Shoot lasers. Defeat enemy bosses.</div>
+                <div class="triangle" style="top:-30px; right:20%;"></div>
+            </a>
+
+            <a href="memory_card.html" class="game-item">
+                <div class="game-title">Memory Cards</div>
+                <div class="game-description">Brain Training</div>
+                <div class="how-to-play">Flip cards. Remember positions. Match all pairs.</div>
+                <div class="triangle" style="bottom:10px; right:10px;"></div>
+            </a>
+
+            <a href="car-racing.html" class="game-item">
+                <div class="game-title">Car Racing</div>
+                <div class="game-description">Racing Sim</div>
+                <div class="how-to-play">Steer with arrows. Dodge obstacles. Finish fast.</div>
+                <div class="triangle" style="top:0; left:-30px;"></div>
+            </a>
+
+            <a href="pong.html" class="game-item">
+                <div class="game-title">Pong</div>
+                <div class="game-description">Sports Classic</div>
+                <div class="how-to-play">Move paddle. Hit ball. Score past opponent.</div>
+                <div class="triangle" style="bottom:-30px; right:10%;"></div>
+            </a>
+
+            <a href="tetris.html" class="game-item">
+                <div class="game-title">Tetris</div>
+                <div class="game-description">Puzzle Strategy</div>
+                <div class="how-to-play">Rotate blocks. Clear lines. Don’t let it stack.</div>
+                <div class="triangle" style="top:-10px; left:-10px;"></div>
+            </a>
+
+            <a href="rock-paper-scissors.html" class="game-item">
+                <div class="game-title">Rock Paper Scissors</div>
+                <div class="game-description">Chance Game</div>
+                <div class="how-to-play">Classic rules: Rock > Scissors > Paper > Rock.</div>
+                <div class="triangle" style="bottom:40%; left:-20px;"></div>
+            </a>
+
+            <a href="wordsearch.html" class="game-item">
+                <div class="game-title">Word Search</div>
+                <div class="game-description">Hidden Words</div>
+                <div class="how-to-play">Select hidden words in the grid to win.</div>
+                <div class="triangle" style="top:40%; right:-20px;"></div>
+            </a>
+
+            <a href="color-sound-match.html" class="game-item">
+                <div class="game-title">Color & Sound Match</div>
+                <div class="game-description">Sensory Game</div>
+                <div class="how-to-play">Remember and click the correct sequence.</div>
+                <div class="triangle" style="top:-30px; right:30%;"></div>
+            </a>
+
+            <a href="number-guessing.html" class="game-item">
+                <div class="game-title">Number Guessing</div>
+                <div class="game-description">Logic Puzzle</div>
+                <div class="how-to-play">Guess 1-100. Use hints. You have 10 tries.</div>
+                <div class="triangle" style="bottom:-20px; left:40%;"></div>
+            </a>
+
+            <a href="maze-runner.html" class="game-item">
+                <div class="game-title">Maze Runner</div>
+                <div class="game-description">Adventure</div>
+                <div class="how-to-play">Move with arrows. Find the exit. Avoid traps.</div>
+                <div class="triangle" style="top:50%; left:-30px;"></div>
+            </a>
+
+            <a href="rhythm-master.html" class="game-item">
+                <div class="game-title">Rhythm Master</div>
+                <div class="game-description">Music Game</div>
+                <div class="how-to-play">Listen to rhythm. Tap on beat for high scores.</div>
+                <div class="triangle" style="bottom:-30px; right:-10px;"></div>
+            </a>
+
+            <a href="wordconnect.html" class="game-item">
+                <div class="game-title">Word Connect</div>
+                <div class="game-description">Word Building</div>
+                <div class="how-to-play">Drag letters. Form words. Clear the puzzles.</div>
+                <div class="triangle" style="top:-20px; right:50%;"></div>
+            </a>
+
+            <a href="dots-and-boxes.html" class="game-item">
+                <div class="game-title">Dots and Boxes</div>
+                <div class="game-description">Strategy</div>
+                <div class="how-to-play">Draw lines. Complete boxes. Outsmart opponent.</div>
+                <div class="triangle" style="top:10px; right:10px;"></div>
+            </a>
+
+            <a href="math-quiz.html" class="game-item">
+                <div class="game-title">Math Quiz</div>
+                <div class="game-description">Education</div>
+                <div class="how-to-play">Solve problems quickly. Pick correct answers.</div>
+                <div class="triangle" style="bottom:10px; left:10px;"></div>
+            </a>
+
+            <a href="maze-generator.html" class="game-item">
+                <div class="game-title">Maze Generator</div>
+                <div class="game-description">Exploration</div>
+                <div class="how-to-play">Navigate dynamic mazes. Collect coins.</div>
+                <div class="triangle" style="top:-20px; right:-20px;"></div>
+            </a>
+
+            <a href="pacman.html" class="game-item">
+                <div class="game-title">Pac-Man</div>
+                <div class="game-description">Legendary Arcade</div>
+                <div class="how-to-play">Collect food. Avoid ghosts. Survive the maze.</div>
+                <div class="triangle" style="bottom:-30px; left:20%;"></div>
+            </a>
+
+            <a href="flappy-bird.html" class="game-item">
+                <div class="game-title">Flappy Bird</div>
+                <div class="game-description">Endless Runner</div>
+                <div class="how-to-play">Tap to flap. Avoid pipes. Don't crash!</div>
+                <div class="triangle" style="top:40%; right:-20px;"></div>
+            </a>
+
+            <a href="classic-mario.html" class="game-item">
+                <div class="game-title">Classic Mario</div>
+                <div class="game-description">Platformer</div>
+                <div class="how-to-play">Jump and run. Collect coins. Avoid enemies.</div>
+                <div class="triangle" style="top:-30px; left:-10px;"></div>
+            </a>
+
+            <a href="Catch_insect.html" class="game-item">
+                <div class="game-title">Catch Insect</div>
+                <div class="game-description">Reflexes</div>
+                <div class="how-to-play">Catch insects before time runs out. Be quick!</div>
+                <div class="triangle" style="bottom:-10px; right:-10px;"></div>
+            </a>
+
+            <a href="Quiz_game.html" class="game-item">
+                <div class="game-title">Quiz Game</div>
+                <div class="game-description">Trivia</div>
+                <div class="how-to-play">Test your knowledge. Answer questions fast.</div>
+                <div class="triangle" style="top:50%; right:50%;"></div>
+            </a>
+
+            <div id="noResults">
+                <i class="fas fa-ghost fa-3x"></i>
+                <p style="margin-top: 15px;">No games found with that name.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Search Logic
+        const searchInput = document.getElementById('gameSearch');
+        const gameItems = document.querySelectorAll('.game-item');
+        const noResults = document.getElementById('noResults');
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            let hasFound = false;
+
+            gameItems.forEach(item => {
+                const title = item.querySelector('.game-title').innerText.toLowerCase();
+                const desc = item.querySelector('.game-description').innerText.toLowerCase();
+                if (title.includes(term) || desc.includes(term)) {
+                    item.style.display = 'flex';
+                    hasFound = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            noResults.style.display = hasFound ? 'none' : 'block';
+        });
+
+        // 2. 3D Tilt Effect
+        gameItems.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+
+                card.style.transform = `perspective(1000px) translateY(-10px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) translateY(0) rotateX(0) rotateY(0)`;
+            });
+        });
+
+        // 3. Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        themeToggle.addEventListener('click', () => {
+            const isLight = body.getAttribute('data-theme') === 'light';
+            const nextTheme = isLight ? 'dark' : 'light';
+            body.setAttribute('data-theme', nextTheme);
+            themeToggle.innerHTML = isLight ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            localStorage.setItem('gameHubTheme', nextTheme);
+        });
+
+        // Check local storage
+        if (localStorage.getItem('gameHubTheme') === 'light') {
+            body.setAttribute('data-theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+    </script>
+</body>
+</html>
