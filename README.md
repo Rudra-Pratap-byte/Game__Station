@@ -1,1 +1,1 @@
-Wanna play the game? https://rudra-pratap-byte.github.io/Game__Station/ Here's the link
+Wanna play the game? https://k4rtik3y.github.io/Game__Station/ Here's the link
